@@ -10,10 +10,10 @@ import org.springframework.stereotype.Component;
  * Created by Manol on 12/12/2015.
  */
 @Component
-public class OauthClient {
+public final class OauthClient {
 
-    private AuthorisationService service;
-    private Token token;
+    private final AuthorisationService service;
+    private final Token token;
 
     @Value("${strava.client-secret}")
     private String clientSecret;
@@ -29,5 +29,7 @@ public class OauthClient {
         token = service.tokenExchange(applicationClientId, clientSecret, code);
     }
 
-
+    public Token getToken() {
+        return token;
+    }
 }
