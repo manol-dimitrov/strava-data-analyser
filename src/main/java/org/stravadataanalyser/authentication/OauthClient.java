@@ -3,6 +3,7 @@ package org.stravadataanalyser.authentication;
 import javastrava.api.v3.auth.AuthorisationService;
 import javastrava.api.v3.auth.impl.retrofit.AuthorisationServiceImpl;
 import javastrava.api.v3.auth.model.Token;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -10,26 +11,27 @@ import org.springframework.stereotype.Component;
  * Created by Manol on 12/12/2015.
  */
 @Component
-public final class OauthClient {
+public class OauthClient {
 
-    private final AuthorisationService service;
-    private final Token token;
+    private AuthorisationService service;
+    private Token token;
 
-    @Value("${strava.client-secret}")
     private String clientSecret;
-
-    @Value("${strava.application-client-id}")
-    private Integer applicationClientId;
-
-    @Value("${strava.code}")
+    private String applicationClientId;
     private String code;
 
-    public OauthClient() {
-        service = new AuthorisationServiceImpl();
-        token = service.tokenExchange(applicationClientId, clientSecret, code);
+    @Autowired
+    public OauthClient(@Value(value = "${strava.client-secret}") String clientSecret,
+                       @Value(value = "${strava.application-client-id}") String applicationClientId,
+                       @Value(value = "${strava.code}") String code) {
+        this.clientSecret = clientSecret;
+        this.applicationClientId = applicationClientId;
+        this.code = code;
     }
 
     public Token getToken() {
+        service = new AuthorisationServiceImpl();
+        token = service.tokenExchange(Integer.valueOf(this.applicationClientId), this.clientSecret, this.code);
         return token;
     }
 }

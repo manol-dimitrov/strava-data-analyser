@@ -4,8 +4,6 @@ jdk:
 deploy:
       - provider: s3
       - provider: codedeploy
-        access_key_id: "AKIAILGW4GB6GD64CHOA"
-        secret_access_key: "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"
         bucket: "elasticbeanstalk-us-west-2-435335067961"
         key: strava-data-analyser-release.war
         application: Strava Data Analyser
