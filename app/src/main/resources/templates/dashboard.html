@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Enduro Coach</title>
+    <style>
+        :root {
+            --bg: #f5f6f8;
+            --surface: #ffffff;
+            --border: #e2e5ea;
+            --text: #1a1d23;
+            --text-secondary: #5f6570;
+            --text-muted: #8b909a;
+            --accent: #1a73e8;
+            --accent-dark: #1557b0;
+            --fresh: #0d9f5f;
+            --fresh-bg: #e6f9f0;
+            --neutral-clr: #b8860b;
+            --neutral-bg: #fef8e8;
+            --fatigued: #d13438;
+            --fatigued-bg: #fde8e8;
+            --strava-orange: #fc4c02;
+            --radius: 10px;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,.06);
+            --shadow-md: 0 2px 8px rgba(0,0,0,.08);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif; max-width: 1120px; margin: 0 auto; padding: 28px 20px; color: var(--text); background: var(--bg); line-height: 1.5; }
+
+        /* ---- Header ---- */
+        .header { margin-bottom: 24px; }
+        .header h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.4px; }
+        .header .subtitle { color: var(--text-secondary); font-size: 14px; margin-top: 2px; }
+
+        /* ---- Strava bar ---- */
+        .strava-bar { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 18px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; box-shadow: var(--shadow-sm); }
+        .strava-bar .status { font-size: 14px; color: var(--text-secondary); display: flex; align-items: center; gap: 8px; }
+        .strava-bar .dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+        .strava-bar .dot.connected { background: var(--fresh); box-shadow: 0 0 0 3px var(--fresh-bg); }
+        .strava-bar .dot.disconnected { background: #ccc; }
+        .strava-bar a { background: var(--strava-orange); color: #fff; padding: 7px 16px; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600; transition: background .15s; }
+        .strava-bar a:hover { background: #e04400; }
+
+        /* ---- Banister method explainer ---- */
+        .method-explainer { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 24px; margin-bottom: 24px; box-shadow: var(--shadow-sm); }
+        .method-explainer .method-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+        .method-explainer .method-icon { width: 36px; height: 36px; background: linear-gradient(135deg, var(--accent), #4a90d9); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 18px; font-weight: 700; flex-shrink: 0; }
+        .method-explainer h3 { font-size: 16px; font-weight: 700; }
+        .method-explainer .method-subtitle { font-size: 13px; color: var(--text-muted); font-weight: 400; }
+        .method-explainer .method-body { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .method-explainer .method-col p { font-size: 13px; color: var(--text-secondary); line-height: 1.65; }
+        .method-explainer .method-col p + p { margin-top: 8px; }
+        .method-formula { background: var(--bg); border-radius: 8px; padding: 14px 16px; margin-top: 12px; font-family: "SF Mono", SFMono-Regular, "Cascadia Code", Consolas, monospace; font-size: 13px; color: var(--text); text-align: center; line-height: 1.8; }
+        .method-formula .var { font-weight: 600; }
+        .method-formula .label { font-size: 11px; color: var(--text-muted); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+
+        /* ---- Metrics ---- */
+        .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+        .metric-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; position: relative; box-shadow: var(--shadow-sm); transition: box-shadow .15s; }
+        .metric-card:hover { box-shadow: var(--shadow-md); }
+        .metric-card .metric-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+        .metric-card .metric-value { font-size: 32px; font-weight: 800; line-height: 1.1; letter-spacing: -0.5px; }
+        .metric-card .metric-unit { font-size: 14px; font-weight: 400; color: var(--text-muted); }
+        .metric-card .metric-explain { font-size: 12px; color: var(--text-secondary); margin-top: 10px; line-height: 1.55; border-top: 1px solid var(--border); padding-top: 10px; }
+        .metric-card .metric-context { font-size: 11px; color: var(--text-muted); margin-top: 6px; font-style: italic; }
+        .badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; margin-top: 6px; letter-spacing: 0.2px; }
+        .badge.fresh { background: var(--fresh-bg); color: var(--fresh); }
+        .badge.neutral { background: var(--neutral-bg); color: var(--neutral-clr); }
+        .badge.fatigued { background: var(--fatigued-bg); color: var(--fatigued); }
+        .badge.demo-badge { background: #eef0f2; color: #5f6570; }
+        .badge.strava-badge { background: #fff2e6; color: #994400; }
+
+        /* ---- Chart ---- */
+        .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 24px; margin-bottom: 24px; box-shadow: var(--shadow-sm); }
+        .chart-card h3 { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+        .chart-card .chart-subtitle { font-size: 12px; color: var(--text-muted); margin-bottom: 14px; }
+        .chart-card svg { width: 100%; height: auto; }
+        .chart-legend { display: flex; gap: 18px; margin-top: 12px; flex-wrap: wrap; }
+        .chart-legend span { font-size: 12px; color: var(--text-secondary); display: flex; align-items: center; gap: 5px; }
+        .chart-legend .swatch { width: 14px; height: 3px; border-radius: 2px; }
+
+        /* ---- Two-column layout ---- */
+        .layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow-sm); }
+        .card h2 { font-size: 17px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .card h2 .card-icon { font-size: 20px; }
+
+        /* ---- Form ---- */
+        .form-group { margin-bottom: 14px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 5px; }
+        .form-group input, .form-group select { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; color: var(--text); background: var(--bg); transition: border-color .15s; }
+        .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(26,115,232,.12); }
+        .form-group .hint { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+        .btn-row { display: flex; gap: 10px; margin-top: 18px; }
+        button { padding: 11px 20px; cursor: pointer; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; transition: all .15s; }
+        button[type="submit"] { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
+        button[type="submit"]:hover { background: #eceef1; }
+        button[formaction*="generate"] { background: var(--accent); color: #fff; }
+        button[formaction*="generate"]:hover { background: var(--accent-dark); }
+
+        /* ---- Workout ---- */
+        .workout-empty { color: var(--text-muted); font-size: 14px; text-align: center; padding: 32px 16px; }
+        .workout-empty .empty-icon { font-size: 36px; margin-bottom: 8px; }
+        .error { background: var(--fatigued-bg); border: 1px solid #f0b7b7; padding: 14px 16px; border-radius: 8px; margin-bottom: 14px; font-size: 14px; }
+        .error strong { color: var(--fatigued); }
+        .workout-section { margin-bottom: 16px; }
+        .workout-section .ws-header { display: flex; align-items: center; gap: 7px; margin-bottom: 6px; }
+        .workout-section .ws-icon { font-size: 16px; }
+        .workout-section .ws-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--accent); }
+        .workout-section p { font-size: 14px; line-height: 1.7; color: var(--text); }
+        .reasoning-block { background: linear-gradient(135deg, #f0f4f8, #e8ecf2); border-left: 3px solid var(--accent); padding: 16px 18px; border-radius: 0 8px 8px 0; margin-top: 16px; }
+        .reasoning-block .ws-header { margin-bottom: 8px; }
+        .reasoning-block .ws-label { color: var(--accent-dark); }
+        .reasoning-block p { font-size: 13px; line-height: 1.7; color: var(--text-secondary); }
+        .generated-at { font-size: 11px; color: var(--text-muted); margin-top: 12px; }
+
+        /* ---- Responsive ---- */
+        @media (max-width: 768px) {
+            .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+            .layout { grid-template-columns: 1fr; }
+            .method-explainer .method-body { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>Enduro Coach</h1>
+    <p class="subtitle">AI-powered session prescription built on the Banister impulse-response model</p>
+</div>
+
+{{stravaBar}}
+
+<!-- Banister Method Explainer -->
+<div class="method-explainer">
+    <div class="method-header">
+        <div class="method-icon">&Sigma;</div>
+        <div>
+            <h3>The Banister Impulse-Response Model</h3>
+            <span class="method-subtitle">The scientific foundation behind your training load analysis</span>
+        </div>
+    </div>
+    <div class="method-body">
+        <div class="method-col">
+            <p>Developed by <strong>Eric Banister</strong> and colleagues in the 1970s&ndash;80s at Simon Fraser University, the impulse-response model treats each training session as an <em>impulse</em> that produces two competing biological responses: a <strong>fitness gain</strong> (slow-building, long-lasting) and a <strong>fatigue cost</strong> (fast-building, fast-decaying).</p>
+            <p>Your performance readiness at any moment is the difference between these two responses. This is the theoretical basis of periodisation &mdash; why tapering works, why overreaching is productive only in controlled doses, and why consistent training beats sporadic hard efforts.</p>
+        </div>
+        <div class="method-col">
+            <p>We quantify each session using <strong>TRIMP</strong> (Training Impulse) &mdash; a heart-rate-weighted measure of internal load that accounts for both duration and intensity. Sessions at higher heart rates produce exponentially more TRIMP than easy efforts.</p>
+            <p>Two exponential moving averages smooth the daily TRIMP into actionable metrics: <strong>CTL</strong> tracks the slow fitness trend (42-day time constant), <strong>ATL</strong> tracks acute fatigue (7-day time constant), and <strong>TSB</strong> reveals whether fitness or fatigue currently dominates.</p>
+        </div>
+    </div>
+    <div class="method-formula">
+        <span class="var">TRIMP</span> = duration &times; &Delta;HR ratio &times; e<sup>1.92 &times; &Delta;HR ratio</sup> &nbsp;&nbsp;|&nbsp;&nbsp;
+        <span class="var">CTL</span><sub class="label">today</sub> = CTL<sub class="label">yesterday</sub> + (TRIMP &minus; CTL<sub class="label">yesterday</sub>) / 42 &nbsp;&nbsp;|&nbsp;&nbsp;
+        <span class="var">TSB</span> = CTL &minus; ATL
+    </div>
+</div>
+
+<!-- Metrics -->
+<div class="metrics-grid">
+    <div class="metric-card">
+        <div class="metric-label">CTL &middot; Chronic Training Load</div>
+        <div class="metric-value">{{ctl}}</div>
+        {{ctlBadge}}
+        <div class="metric-explain">{{ctlExplain}}</div>
+        <div class="metric-context">42-day EMA of daily TRIMP. Reflects aerobic fitness built over weeks of consistent training. Rising CTL = improving fitness base.</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-label">ATL &middot; Acute Training Load</div>
+        <div class="metric-value">{{atl}}</div>
+        {{atlBadge}}
+        <div class="metric-explain">{{atlExplain}}</div>
+        <div class="metric-context">7-day EMA of daily TRIMP. Represents recent training stress. When ATL greatly exceeds CTL, fatigue is accumulating faster than fitness.</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-label">TSB &middot; Training Stress Balance</div>
+        <div class="metric-value">{{tsb}}</div>
+        {{tsbBadge}}
+        <div class="metric-explain">{{tsbExplain}}</div>
+        <div class="metric-context">CTL &minus; ATL. The key decision metric: positive = fresh and ready; negative = fatigued. Race-ready zone is typically +5 to +15.</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-label">7-Day Volume</div>
+        <div class="metric-value">{{volume}}<span class="metric-unit">min</span></div>
+        {{volumeBadge}}
+        <div class="metric-explain">{{volumeExplain}}</div>
+        <div class="metric-context">Total training duration in the last 7 days. Context for whether current load is typical, building, or in a recovery phase.</div>
+    </div>
+</div>
+
+<!-- Load Chart -->
+<div class="chart-card">
+    <h3>Training Load Curve</h3>
+    <p class="chart-subtitle">CTL (fitness), ATL (fatigue) and TSB (form) over the analysis window &middot; {{source}} {{sourceBadge}}</p>
+    {{loadChart}}
+    <div class="chart-legend">
+        <span><span class="swatch" style="background:var(--accent);"></span> CTL (Fitness)</span>
+        <span><span class="swatch" style="background:var(--strava-orange);"></span> ATL (Fatigue)</span>
+        <span><span class="swatch" style="background:var(--fresh); height:2px; border-top:1px dashed var(--fresh);"></span> TSB (Form)</span>
+        <span><span class="swatch" style="background:#ddd;"></span> Zero line</span>
+    </div>
+</div>
+
+<!-- Check-in & Workout -->
+<div class="layout">
+    <div class="card">
+        <h2><span class="card-icon">&#x1F3CB;</span> Daily Check-in</h2>
+        <form action="/dashboard/checkin" method="post">
+            <div class="form-group">
+                <label>Leg feeling</label>
+                <input type="range" name="legFeeling" min="1" max="10" value="{{legFeeling}}" oninput="this.nextElementSibling.textContent=this.value+'/10'" required />
+                <span class="hint">{{legFeeling}}/10</span>
+            </div>
+            <div class="form-group">
+                <label>Mental readiness</label>
+                <input type="range" name="mentalReadiness" min="1" max="10" value="{{mentalReadiness}}" oninput="this.nextElementSibling.textContent=this.value+'/10'" required />
+                <span class="hint">{{mentalReadiness}}/10</span>
+            </div>
+            <div class="form-group">
+                <label>Time available (minutes)</label>
+                <input type="number" name="timeAvailableMinutes" min="15" max="240" value="{{timeAvailableMinutes}}" required />
+                <span class="hint">15&ndash;240 minutes</span>
+            </div>
+            <div class="form-group">
+                <label>Coaching philosophy</label>
+                <select name="coachingPhilosophy">
+                    {{philosophyOptions}}
+                </select>
+                <span class="hint">Controls risk tolerance and intensity bias</span>
+            </div>
+            <div class="btn-row">
+                <button type="submit">Save check-in</button>
+                <button type="submit" formaction="/dashboard/generate">Generate workout</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="card">
+        <h2><span class="card-icon">&#x1F4CB;</span> Workout Prescription</h2>
+        {{errorCard}}
+        {{workoutCard}}
+    </div>
+</div>
+
+</body>
+</html>
