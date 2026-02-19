@@ -1,5 +1,7 @@
 # Enduro Coach — Kotlin MVP
 
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/manol-dimitrov/strava-data-analyser?quickstart=1)
+
 AI-powered endurance coaching built on the **Banister impulse-response model** — ingests training data from Strava, computes physiological load metrics, and generates structured workout prescriptions via Google Gemini.
 
 ## Architecture
@@ -61,7 +63,28 @@ For GitHub Codespaces, set redirect URI to `https://<codespace-name>-8080.app.gi
 
 OAuth tokens are stored encrypted (AES-256-GCM) under `~/.enduro-coach/`.
 
-## Run
+## Quick Start with GitHub Codespaces
+
+The fastest way to try this — no local setup required:
+
+1. **Get API keys** (both free):
+   - [Google Gemini API key](https://aistudio.google.com/apikey)
+   - [Strava API application](https://www.strava.com/settings/api) — set **Authorization Callback Domain** to `<your-codespace-name>-8080.app.github.dev`
+
+2. **Click "Open in Codespaces"** above (or go to the repo → Code → Codespaces → New)
+
+3. **Add secrets** — Codespaces will prompt for these on first launch:
+   - `GEMINI_API_KEY`
+   - `STRAVA_CLIENT_ID`
+   - `STRAVA_CLIENT_SECRET`
+
+4. **Wait for build** — the devcontainer auto-runs `gradle build` and starts the app on port 8080
+
+5. **Open the dashboard** — Codespaces auto-opens the forwarded port in your browser. The Strava redirect URI is auto-configured.
+
+> **Without any keys?** The app still works — it uses demo training data and shows a graceful error for workout generation. You can explore the dashboard, metrics, and Banister model explainer.
+
+## Run Locally
 
 ```bash
 # Build

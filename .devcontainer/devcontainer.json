@@ -1,0 +1,47 @@
+{
+  "name": "Enduro Coach",
+  "image": "mcr.microsoft.com/devcontainers/java:17-bullseye",
+  "features": {
+    "ghcr.io/devcontainers/features/java:1": {
+      "version": "17",
+      "installGradle": "true",
+      "gradleVersion": "8.12"
+    }
+  },
+  "forwardPorts": [8080],
+  "portsAttributes": {
+    "8080": {
+      "label": "Enduro Coach Dashboard",
+      "onAutoForward": "openBrowser",
+      "visibility": "public"
+    }
+  },
+  "secrets": {
+    "GEMINI_API_KEY": {
+      "description": "Google Gemini API key (free at aistudio.google.com/apikey)",
+      "documentationUrl": "https://aistudio.google.com/apikey"
+    },
+    "STRAVA_CLIENT_ID": {
+      "description": "Strava API application Client ID (from strava.com/settings/api)"
+    },
+    "STRAVA_CLIENT_SECRET": {
+      "description": "Strava API application Client Secret"
+    }
+  },
+  "containerEnv": {
+    "STRAVA_REDIRECT_URI": "https://${localEnv:CODESPACE_NAME}-8080.app.github.dev/api/strava/exchange"
+  },
+  "postCreateCommand": "gradle build",
+  "postStartCommand": "nohup bash -c 'gradle :app:run' > /tmp/enduro-coach.log 2>&1 &",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "fwcd.kotlin",
+        "vscjava.vscode-gradle"
+      ],
+      "settings": {
+        "editor.formatOnSave": true
+      }
+    }
+  }
+}
