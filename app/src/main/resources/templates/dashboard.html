@@ -6,14 +6,14 @@
     <title>Enduro Coach</title>
     <style>
         :root {
-            --bg: #f5f6f8;
+            --bg: #f4f7ff;
             --surface: #ffffff;
-            --border: #e2e5ea;
+            --border: #dbe3f0;
             --text: #1a1d23;
             --text-secondary: #5f6570;
             --text-muted: #8b909a;
-            --accent: #1a73e8;
-            --accent-dark: #1557b0;
+            --accent: #3b82f6;
+            --accent-dark: #2563eb;
             --fresh: #0d9f5f;
             --fresh-bg: #e6f9f0;
             --neutral-clr: #b8860b;
@@ -21,17 +21,17 @@
             --fatigued: #d13438;
             --fatigued-bg: #fde8e8;
             --strava-orange: #fc4c02;
-            --radius: 10px;
-            --shadow-sm: 0 1px 3px rgba(0,0,0,.06);
-            --shadow-md: 0 2px 8px rgba(0,0,0,.08);
+            --radius: 14px;
+            --shadow-sm: 0 8px 24px rgba(30, 58, 138, .06);
+            --shadow-md: 0 12px 30px rgba(30, 58, 138, .12);
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif; max-width: 1120px; margin: 0 auto; padding: 28px 20px; color: var(--text); background: var(--bg); line-height: 1.5; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif; max-width: 1120px; margin: 0 auto; padding: 28px 20px; color: var(--text); background: radial-gradient(circle at top, #e9f1ff 0%, #f4f7ff 45%, #f8faff 100%); line-height: 1.5; }
 
         /* ---- Header ---- */
-        .header { margin-bottom: 24px; }
-        .header h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.4px; }
-        .header .subtitle { color: var(--text-secondary); font-size: 14px; margin-top: 2px; }
+        .header { margin-bottom: 24px; background: linear-gradient(120deg, #eef4ff, #f9fbff); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 22px; box-shadow: var(--shadow-sm); }
+        .header h1 { font-size: 30px; font-weight: 800; letter-spacing: -0.7px; color: #0f2354; }
+        .header .subtitle { color: var(--text-secondary); font-size: 14px; margin-top: 4px; }
 
         /* ---- Strava bar ---- */
         .strava-bar { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 18px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; box-shadow: var(--shadow-sm); }
@@ -64,6 +64,11 @@
         .metric-card .metric-unit { font-size: 14px; font-weight: 400; color: var(--text-muted); }
         .metric-card .metric-explain { font-size: 12px; color: var(--text-secondary); margin-top: 10px; line-height: 1.55; border-top: 1px solid var(--border); padding-top: 10px; }
         .metric-card .metric-context { font-size: 11px; color: var(--text-muted); margin-top: 6px; font-style: italic; }
+        .info-details { margin-top: 8px; border-top: 1px dashed var(--border); padding-top: 8px; }
+        .info-summary { list-style: none; cursor: pointer; font-size: 11px; font-weight: 600; color: var(--accent-dark); display: inline-flex; align-items: center; gap: 6px; }
+        .info-summary::-webkit-details-marker { display: none; }
+        .info-icon { width: 16px; height: 16px; border-radius: 50%; background: #e8f0ff; color: var(--accent-dark); display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
+        .info-content { margin-top: 6px; font-size: 11px; color: var(--text-muted); line-height: 1.6; font-style: italic; }
         .badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; margin-top: 6px; letter-spacing: 0.2px; }
         .badge.fresh { background: var(--fresh-bg); color: var(--fresh); }
         .badge.neutral { background: var(--neutral-bg); color: var(--neutral-clr); }
@@ -141,22 +146,26 @@
             <span class="method-subtitle">The scientific foundation behind your training load analysis</span>
         </div>
     </div>
-    <div class="method-body">
-        <div class="method-col">
-            <p>Developed by <strong>Eric Banister</strong> and colleagues in the 1970s&ndash;80s, the impulse-response model treats each training session as an <em>impulse</em> that produces two competing biological responses: a <strong>fitness gain</strong> (slow-building, long-lasting) and a <strong>fatigue cost</strong> (fast-building, fast-decaying).</p>
-            <p>Your performance readiness at any moment is the difference between these two responses. This is the theoretical basis of periodisation. We extend it with <strong>Tim Gabbett&rsquo;s ACWR</strong> (acute:chronic workload ratio) and <strong>Carl Foster&rsquo;s training monotony</strong> for a more complete, modern picture.</p>
+    <p class="method-subtitle">Built to be actionable first: you see clear readiness signals, and can expand technical modelling detail when needed.</p>
+    <details class="info-details">
+        <summary class="info-summary"><span class="info-icon">i</span> View modelling details and formulas</summary>
+        <div class="method-body">
+            <div class="method-col">
+                <p>Developed by <strong>Eric Banister</strong> and colleagues in the 1970s&ndash;80s, the impulse-response model treats each training session as an <em>impulse</em> that produces two competing biological responses: a <strong>fitness gain</strong> (slow-building, long-lasting) and a <strong>fatigue cost</strong> (fast-building, fast-decaying).</p>
+                <p>Your performance readiness at any moment is the difference between these two responses. This is the theoretical basis of periodisation. We extend it with <strong>Tim Gabbett&rsquo;s ACWR</strong> (acute:chronic workload ratio) and <strong>Carl Foster&rsquo;s training monotony</strong> for a more complete, modern picture.</p>
+            </div>
+            <div class="method-col">
+                <p>We quantify each session using <strong>zone-weighted TRIMP</strong> (Lucia et al. 2003) &mdash; a heart-rate-reserve measure that weights intensity by training zone rather than an exponential function. This avoids over-penalising moderate aerobic work.</p>
+                <p>Two exponential moving averages smooth the daily TRIMP: <strong>CTL</strong> tracks slow fitness (42-day), <strong>ATL</strong> tracks acute fatigue (7-day), and <strong>TSB</strong> reveals whether fitness or fatigue dominates. <strong>ACWR</strong> (ATL/CTL) flags safe loading zones per Gabbett&rsquo;s injury-risk research.</p>
+            </div>
         </div>
-        <div class="method-col">
-            <p>We quantify each session using <strong>zone-weighted TRIMP</strong> (Lucia et al. 2003) &mdash; a heart-rate-reserve measure that weights intensity by training zone rather than an exponential function. This avoids over-penalising moderate aerobic work.</p>
-            <p>Two exponential moving averages smooth the daily TRIMP: <strong>CTL</strong> tracks slow fitness (42-day), <strong>ATL</strong> tracks acute fatigue (7-day), and <strong>TSB</strong> reveals whether fitness or fatigue dominates. <strong>ACWR</strong> (ATL/CTL) flags safe loading zones per Gabbett&rsquo;s injury-risk research.</p>
+        <div class="method-formula">
+            <span class="var">TRIMP</span> = duration &times; %HRR &times; zone-weight &nbsp;&nbsp;|&nbsp;&nbsp;
+            <span class="var">CTL</span><sub class="label">today</sub> = CTL<sub class="label">yesterday</sub> + (TRIMP &minus; CTL<sub class="label">yesterday</sub>) / 42 &nbsp;&nbsp;|&nbsp;&nbsp;
+            <span class="var">TSB</span> = CTL &minus; ATL &nbsp;&nbsp;|&nbsp;&nbsp;
+            <span class="var">ACWR</span> = ATL / CTL
         </div>
-    </div>
-    <div class="method-formula">
-        <span class="var">TRIMP</span> = duration &times; %HRR &times; zone-weight &nbsp;&nbsp;|&nbsp;&nbsp;
-        <span class="var">CTL</span><sub class="label">today</sub> = CTL<sub class="label">yesterday</sub> + (TRIMP &minus; CTL<sub class="label">yesterday</sub>) / 42 &nbsp;&nbsp;|&nbsp;&nbsp;
-        <span class="var">TSB</span> = CTL &minus; ATL &nbsp;&nbsp;|&nbsp;&nbsp;
-        <span class="var">ACWR</span> = ATL / CTL
-    </div>
+    </details>
 </div>
 
 <!-- Metrics -->
@@ -166,42 +175,42 @@
         <div class="metric-value">{{ctl}}</div>
         {{ctlBadge}}
         <div class="metric-explain">{{ctlExplain}}</div>
-        <div class="metric-context">42-day EMA of daily TRIMP. Reflects aerobic fitness built over weeks of consistent training. Rising CTL = improving fitness base.</div>
+        <details class="info-details metric-context"><summary class="info-summary"><span class="info-icon">i</span> View technical detail</summary><p class="info-content">42-day EMA of daily TRIMP. Reflects aerobic fitness built over weeks of consistent training. Rising CTL = improving fitness base.</p></details>
     </div>
     <div class="metric-card">
         <div class="metric-label">ATL &middot; Acute Training Load</div>
         <div class="metric-value">{{atl}}</div>
         {{atlBadge}}
         <div class="metric-explain">{{atlExplain}}</div>
-        <div class="metric-context">7-day EMA of daily TRIMP. Represents recent training stress. Interpreted via ACWR (Gabbett) rather than raw magnitude.</div>
+        <details class="info-details metric-context"><summary class="info-summary"><span class="info-icon">i</span> View technical detail</summary><p class="info-content">7-day EMA of daily TRIMP. Represents recent training stress. Interpreted via ACWR (Gabbett) rather than raw magnitude.</p></details>
     </div>
     <div class="metric-card">
         <div class="metric-label">TSB &middot; Training Stress Balance</div>
         <div class="metric-value">{{tsb}}</div>
         {{tsbBadge}}
         <div class="metric-explain">{{tsbExplain}}</div>
-        <div class="metric-context">CTL &minus; ATL. Negative TSB during build blocks is expected and productive (Mujika &amp; Busso). Race-ready zone is typically +10 to +25.</div>
+        <details class="info-details metric-context"><summary class="info-summary"><span class="info-icon">i</span> View technical detail</summary><p class="info-content">CTL &minus; ATL. Negative TSB during build blocks is expected and productive (Mujika &amp; Busso). Race-ready zone is typically +10 to +25.</p></details>
     </div>
     <div class="metric-card">
         <div class="metric-label">ACWR &middot; Workload Ratio</div>
         <div class="metric-value">{{acwr}}</div>
         {{acwrBadge}}
         <div class="metric-explain">{{acwrExplain}}</div>
-        <div class="metric-context">Acute:Chronic Workload Ratio (Gabbett 2016). Sweet spot 0.8&ndash;1.3. Above 1.5 = elevated injury risk. Below 0.8 = undertraining.</div>
+        <details class="info-details metric-context"><summary class="info-summary"><span class="info-icon">i</span> View technical detail</summary><p class="info-content">Acute:Chronic Workload Ratio (Gabbett 2016). Sweet spot 0.8&ndash;1.3. Above 1.5 = elevated injury risk. Below 0.8 = undertraining.</p></details>
     </div>
     <div class="metric-card">
         <div class="metric-label">Monotony &middot; Load Variation</div>
         <div class="metric-value">{{monotony}}</div>
         {{monotonyBadge}}
         <div class="metric-explain">{{monotonyExplain}}</div>
-        <div class="metric-context">Foster (1998): mean / SD of 7-day loads. Above 2.0 = insufficient hard/easy variation. Polarised training (Seiler) recommends strong contrast.</div>
+        <details class="info-details metric-context"><summary class="info-summary"><span class="info-icon">i</span> View technical detail</summary><p class="info-content">Foster (1998): mean / SD of 7-day loads. Above 2.0 = insufficient hard/easy variation. Polarised training (Seiler) recommends strong contrast.</p></details>
     </div>
     <div class="metric-card">
         <div class="metric-label">7-Day Volume</div>
         <div class="metric-value">{{volume}}<span class="metric-unit">min</span></div>
         {{volumeBadge}}
         <div class="metric-explain">{{volumeExplain}}</div>
-        <div class="metric-context">Total training duration in the last 7 days. Context for whether current load is typical, building, or in a recovery phase.</div>
+        <details class="info-details metric-context"><summary class="info-summary"><span class="info-icon">i</span> View technical detail</summary><p class="info-content">Total training duration in the last 7 days. Context for whether current load is typical, building, or in a recovery phase.</p></details>
     </div>
 </div>
 
