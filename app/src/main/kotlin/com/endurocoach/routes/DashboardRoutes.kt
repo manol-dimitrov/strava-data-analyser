@@ -84,9 +84,6 @@ fun Route.installDashboardRoutes(dependencies: DashboardDependencies) {
         val state = session.dashboardState.read()
         val hasToken = dependencies.tokenStore.loadToken(session.tokenStoreKey) != null
         val stravaConnected = dependencies.stravaConfigured && hasToken
-        val stravaAuthUrl = if (!stravaConnected) {
-            session.oauthService?.buildAuthorizationUrl(state = session.id)
-        } else null
 
         val (source, snapshot) = dependencies.loadProvider(session.activityRepository)
 
@@ -97,7 +94,7 @@ fun Route.installDashboardRoutes(dependencies: DashboardDependencies) {
             snapshot = snapshot,
             philosophyRulePacks = dependencies.philosophyRulePacks,
             stravaConnected = stravaConnected,
-            stravaAuthUrl = stravaAuthUrl
+            stravaConfigured = dependencies.stravaConfigured
         )
 
         call.respondText(html, ContentType.Text.Html)
@@ -180,7 +177,7 @@ private fun renderDashboard(
     snapshot: LoadSnapshot,
     philosophyRulePacks: Map<String, String>,
     stravaConnected: Boolean = false,
-    stravaAuthUrl: String? = null
+    stravaConfigured: Boolean = false
 ): String {
     val options = philosophyRulePacks.keys.joinToString("\n") { key ->
         val selected = if (state.checkIn.coachingPhilosophy == key) "selected" else ""
@@ -304,8 +301,8 @@ private fun renderDashboard(
         } else {
             """<div class="strava-bar"><span class="status"><span class="dot connected"></span>Strava connected \u2014 no recent activities, showing demo data</span></div>"""
         }
-    } else if (stravaAuthUrl != null) {
-        """<div class="strava-bar"><span class="status"><span class="dot disconnected"></span>Strava not connected</span><a href="${escapeHtml(stravaAuthUrl)}">Connect Strava</a></div>"""
+    } else if (stravaConfigured) {
+        """<div class="strava-bar"><span class="status"><span class="dot disconnected"></span>Strava not connected</span><a href="/api/strava/connect">Connect Strava</a></div>"""
     } else {
         """<div class="strava-bar"><span class="status"><span class="dot disconnected"></span>Strava not configured \u2014 using demo data</span></div>"""
     }
