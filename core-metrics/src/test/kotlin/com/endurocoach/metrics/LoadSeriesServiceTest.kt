@@ -60,11 +60,15 @@ class LoadSeriesServiceTest {
 
     @Test
     fun atlRespondsMoreQuicklyThanCtl() {
-        // With a single large workout, ATL (7-day decay) should be larger than CTL (42-day decay)
-        val date = LocalDate.of(2025, 6, 15)
-        val activities = listOf(Activity(date = date, durationMinutes = 90.0, avgHeartRate = 170))
-        val snapshot = service.buildSnapshot(activities = activities, days = 1, endDate = date)
-        assertTrue(snapshot.atl > snapshot.ctl, "ATL should respond faster than CTL to a single load")
+        // With a burst of high load after a quiet seed period, ATL should jump above CTL
+        val endDate = LocalDate.of(2025, 6, 20)
+        val activities = listOf(
+            Activity(date = endDate, durationMinutes = 120.0, avgHeartRate = 175)
+        )
+        val snapshot = service.buildSnapshot(activities = activities, days = 7, endDate = endDate)
+        // On seed-only days (no activity), CTL/ATL both decay toward 0.
+        // The single big day spikes ATL more than CTL.
+        assertTrue(snapshot.atl > snapshot.ctl, "ATL should respond faster than CTL to a single large load")
     }
 
     @Test
@@ -90,10 +94,40 @@ class LoadSeriesServiceTest {
             )
         }
         val snapshot = service.buildSnapshot(activities = activities, days = 14, endDate = endDate)
-        // 7 days of 30min = 210 minutes
         assertTrue(
             abs(snapshot.recentVolumeMinutes - 210.0) < 0.001,
             "Recent volume should be 7 * 30 = 210, got ${snapshot.recentVolumeMinutes}"
+        )
+    }
+
+    @Test
+    fun acwrIsComputedCorrectly() {
+        val activities = DemoActivityGenerator.generate(days = 45)
+        val snapshot = service.buildSnapshot(activities = activities, days = 45)
+        val expectedAcwr = if (snapshot.ctl > 1.0) snapshot.atl / snapshot.ctl else 1.0
+        assertTrue(
+            abs(snapshot.acwr - expectedAcwr) < 0.001,
+            "ACWR should be ATL/CTL, expected $expectedAcwr, got ${snapshot.acwr}"
+        )
+    }
+
+    @Test
+    fun monotonyIsNonNegative() {
+        val activities = DemoActivityGenerator.generate(days = 14)
+        val snapshot = service.buildSnapshot(activities = activities, days = 14)
+        assertTrue(snapshot.monotony >= 0.0, "Monotony should be non-negative")
+    }
+
+    @Test
+    fun seedingPreventsUnrealisticTsb() {
+        // With consistent training over 45 days, TSB should not be deeply negative
+        // The old algorithm (zero-seeding) produced TSB around -80 to -100 for consistent training.
+        // The new algorithm should keep TSB in a reasonable range.
+        val activities = DemoActivityGenerator.generate(days = 45)
+        val snapshot = service.buildSnapshot(activities = activities, days = 45)
+        assertTrue(
+            snapshot.tsb > -30,
+            "TSB should not be deeply negative for consistent training, got ${snapshot.tsb}"
         )
     }
 }

@@ -1,7 +1,6 @@
 package com.endurocoach.metrics
 
 import kotlin.math.abs
-import kotlin.math.exp
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -24,25 +23,34 @@ class BanisterTrimpCalculatorTest {
     @Test
     fun knownValueAtMidReserve() {
         // HR = 120 → hrRatio = (120-50)/(190-50) = 70/140 = 0.5
-        // TRIMP = 60 * 0.5 * 0.64 * exp(1.92 * 0.5) = 60 * 0.5 * 0.64 * exp(0.96)
-        val hrRatio = 0.5
-        val expected = 60.0 * hrRatio * 0.64 * exp(1.92 * hrRatio)
+        // Zone 1 (< 0.68): zoneWeight = 1.0
+        // TRIMP = 60 * 0.5 * 1.0 = 30.0
+        val expected = 60.0 * 0.5 * 1.0
         val actual = calc.calculate(60.0, 120)
         assertTrue(abs(expected - actual) < 0.001, "Expected $expected, got $actual")
     }
 
     @Test
+    fun tempoZoneUsesHigherWeight() {
+        // HR = 165 → hrRatio = (165-50)/140 = 0.821
+        // Zone 3 (0.82-0.90): zoneWeight = 3.0
+        // TRIMP = 60 * 0.821 * 3.0 = 147.86
+        val hrRatio = (165.0 - 50) / 140
+        val expected = 60.0 * hrRatio * 3.0
+        val actual = calc.calculate(60.0, 165)
+        assertTrue(abs(expected - actual) < 0.01, "Expected $expected, got $actual")
+    }
+
+    @Test
     fun heartRateBelowRestingClampsToZeroRatio() {
-        // HR = 40, below resting 50 → hrRatio clamped to 0 → TRIMP = 0 * ... = 0
-        // Actually: 60 * 0 * 0.64 * exp(0) = 0.0
         val result = calc.calculate(60.0, 40)
         assertEquals(0.0, result)
     }
 
     @Test
     fun heartRateAboveMaxClampsToOneRatio() {
-        // HR = 210, above max 190 → hrRatio clamped to 1.0
-        val expected = 60.0 * 1.0 * 0.64 * exp(1.92)
+        // HR = 210, above max 190 → hrRatio clamped to 1.0, zone 4 weight = 4.0
+        val expected = 60.0 * 1.0 * 4.0
         val actual = calc.calculate(60.0, 210)
         assertTrue(abs(expected - actual) < 0.001, "Expected $expected, got $actual")
     }

@@ -138,7 +138,10 @@ fun Route.installDashboardRoutes(dependencies: DashboardDependencies) {
             currentTsb = snapshot.tsb,
             currentCtl = snapshot.ctl,
             currentAtl = snapshot.atl,
-            recentVolumeMinutes = snapshot.recentVolumeMinutes
+            recentVolumeMinutes = snapshot.recentVolumeMinutes,
+            acwr = snapshot.acwr,
+            monotony = snapshot.monotony,
+            ctlRampRate = snapshot.ctlRampRate
         )
 
         runCatching { dependencies.llmClient.generateWorkoutPlan(request) }
@@ -198,67 +201,73 @@ private fun renderDashboard(
         "<div class=\"error\"><strong>Generation error:</strong> ${escapeHtml(it)}</div>"
     } ?: ""
 
-    // TSB contextual interpretation
+    // TSB contextual interpretation (Mujika & Busso research-based ranges)
     val tsb = snapshot.tsb
     val tsbBadgeClass = when {
-        tsb > 5 -> "fresh"
-        tsb > -10 -> "neutral"
-        else -> "fatigued"
+        tsb > 25 -> "fatigued"   // detraining risk
+        tsb > 10 -> "fresh"      // tapered / race-ready
+        tsb > -10 -> "neutral"   // productive training
+        tsb > -25 -> "neutral"   // build phase — expected
+        else -> "fatigued"       // overreaching risk
     }
     val tsbBadgeLabel = when {
-        tsb > 15 -> "Very fresh"
-        tsb > 5 -> "Fresh"
-        tsb > -10 -> "Functional"
-        tsb > -20 -> "Fatigued"
-        else -> "High fatigue"
+        tsb > 25 -> "Detraining"
+        tsb > 10 -> "Race-ready"
+        tsb > 0 -> "Fresh"
+        tsb > -10 -> "Productive"
+        tsb > -25 -> "Building"
+        else -> "Overreaching"
     }
     val tsbExplain = when {
-        tsb > 15 -> "Strongly positive \u2014 well-rested relative to fitness. Good window for a quality session, time trial, or race."
-        tsb > 5 -> "Mildly positive \u2014 freshness available. Suitable for moderate-to-hard work or a progressive long run."
-        tsb > -10 -> "Near zero \u2014 load and recovery are roughly balanced. Normal productive training range for most athletes."
-        tsb > -20 -> "Negative \u2014 accumulated fatigue exceeds freshness. Consider easier sessions or active recovery."
-        else -> "Deeply negative \u2014 significant fatigue accumulation. Prioritise recovery to avoid non-functional overreaching."
+        tsb > 25 -> "Highly positive \u2014 extended freshness may indicate insufficient training stimulus. Fitness (CTL) will erode if load isn\u2019t restored."
+        tsb > 10 -> "Positive \u2014 classic taper zone. Fatigue has dissipated while fitness is retained. Ideal for racing or a quality breakthrough session."
+        tsb > 0 -> "Mildly positive \u2014 fresh with fitness intact. A good window for moderate-to-hard work or a progressive long run."
+        tsb > -10 -> "Near zero \u2014 the productive training sweet spot (Mujika & Busso). Load and recovery are balanced. This is where consistent adaptation happens."
+        tsb > -25 -> "Moderately negative \u2014 normal during a build block. Functional overreaching is expected here. Monitor subjective readiness and keep recovery quality high."
+        else -> "Deeply negative \u2014 sustained load at this level risks non-functional overreaching. Consider a planned unload week if this persists beyond 7\u201310 days."
     }
 
     // CTL contextual interpretation
     val ctl = snapshot.ctl
     val ctlBadgeClass = when {
-        ctl > 80 -> "fresh"     // high fitness
-        ctl > 40 -> "neutral"   // moderate
-        else -> "fatigued"      // low
+        ctl > 60 -> "fresh"     // strong base
+        ctl > 30 -> "neutral"   // moderate
+        else -> "fatigued"      // developing
     }
     val ctlBadgeLabel = when {
-        ctl > 100 -> "Very high"
-        ctl > 80 -> "High"
-        ctl > 40 -> "Moderate"
-        ctl > 20 -> "Building"
-        else -> "Low"
+        ctl > 80 -> "Very strong"
+        ctl > 60 -> "Strong"
+        ctl > 30 -> "Moderate"
+        ctl > 15 -> "Building"
+        else -> "Developing"
     }
     val ctlExplain = when {
-        ctl > 80 -> "Strong chronic fitness base. Your body has adapted to sustained training loads. Maintain with consistent stimulus."
-        ctl > 40 -> "Moderate fitness level. Room to build \u2014 progressive overload over the coming weeks will push this higher."
-        ctl > 20 -> "Fitness is building. Early adaptation phase \u2014 consistency matters more than intensity right now."
-        else -> "Low chronic load. Either early in a training block or returning from a break. Build gradually."
+        ctl > 60 -> "Solid chronic fitness base. Your body has adapted to sustained training loads. Maintain with consistent stimulus and periodised recovery."
+        ctl > 30 -> "Moderate fitness level with room to grow. Progressive overload over the coming weeks will push this higher. Consistency is key."
+        ctl > 15 -> "Fitness is building. Early adaptation phase \u2014 stay patient, keep sessions regular, and prioritise aerobic base work."
+        else -> "Low chronic load \u2014 either early in a training block or returning from a break. Build gradually with easy volume."
     }
 
-    // ATL contextual interpretation
+    // ATL contextual interpretation (relative to CTL — ACWR-informed)
     val atl = snapshot.atl
+    val acwr = snapshot.acwr
     val atlBadgeClass = when {
-        atl > ctl * 1.3 -> "fatigued"   // high relative fatigue
-        atl > ctl * 0.8 -> "neutral"    // balanced
-        else -> "fresh"                  // low fatigue
+        acwr > 1.5 -> "fatigued"    // spike zone (Gabbett)
+        acwr > 1.3 -> "neutral"     // high but manageable
+        acwr > 0.8 -> "fresh"       // sweet spot (Gabbett)
+        else -> "neutral"            // underloading
     }
     val atlBadgeLabel = when {
-        atl > ctl * 1.5 -> "Very high"
-        atl > ctl * 1.3 -> "High"
-        atl > ctl * 0.8 -> "Balanced"
+        acwr > 1.5 -> "Spike"
+        acwr > 1.3 -> "Elevated"
+        acwr > 0.8 -> "Sweet spot"
         else -> "Low"
     }
     val atlExplain = when {
-        atl > ctl * 1.5 -> "Acute load is far above chronic fitness \u2014 significant short-term fatigue. High risk of overreaching if sustained."
-        atl > ctl * 1.3 -> "Acute load exceeds fitness \u2014 normal during a build phase, but monitor recovery and subjective readiness."
-        atl > ctl * 0.8 -> "Acute and chronic loads are balanced \u2014 sustainable training rhythm. Good for steady adaptation."
-        else -> "Low recent load relative to fitness \u2014 recovery phase or taper. Freshness is building."
+        acwr > 1.5 -> "Acute load is spiking well above chronic fitness (ACWR > 1.5). Gabbett\u2019s research links this zone to elevated injury risk. Scale back intensity or volume."
+        acwr > 1.3 -> "Acute load moderately exceeds chronic fitness (ACWR ${"%.2f".format(acwr)}). Acceptable during a planned build block, but don\u2019t sustain this for more than 1\u20132 weeks."
+        acwr > 0.8 -> "Acute and chronic loads are well-balanced (ACWR ${"%.2f".format(acwr)}). This is Gabbett\u2019s \u2018sweet spot\u2019 (0.8\u20131.3) \u2014 optimal for progressive adaptation with managed injury risk."
+        else -> "Low recent load relative to fitness (ACWR ${"%.2f".format(acwr)}). Recovery or taper phase. Freshness is building, but extended underloading will reduce fitness."
     }
 
     // Volume contextual interpretation
@@ -304,6 +313,45 @@ private fun renderDashboard(
     // SVG load chart
     val loadChart = renderLoadChart(snapshot)
 
+    // ACWR badge
+    val acwrBadgeClass = when {
+        acwr > 1.5 -> "fatigued"
+        acwr > 1.3 -> "neutral"
+        acwr > 0.8 -> "fresh"
+        else -> "neutral"
+    }
+    val acwrBadgeLabel = when {
+        acwr > 1.5 -> "Danger zone"
+        acwr > 1.3 -> "Caution"
+        acwr > 0.8 -> "Sweet spot"
+        else -> "Underloading"
+    }
+    val acwrExplain = when {
+        acwr > 1.5 -> "ACWR > 1.5 \u2014 acute load is spiking relative to your chronic base. Gabbett\u2019s research shows this range significantly elevates injury risk. Reduce load."
+        acwr > 1.3 -> "ACWR in the upper range (1.3\u20131.5). Manageable during a planned overload, but don\u2019t sustain for more than 10 days without an unload."
+        acwr > 0.8 -> "ACWR in the optimal zone (0.8\u20131.3). Training stimulus is progressive relative to your fitness base. This is where the best adaptation-to-risk ratio lives."
+        else -> "ACWR below 0.8 \u2014 current load is well below your established fitness. Good for planned recovery; extended periods here will cause detraining."
+    }
+
+    // Monotony badge (Foster 1998)
+    val mono = snapshot.monotony
+    val monoBadgeClass = when {
+        mono > 2.0 -> "fatigued"
+        mono > 1.5 -> "neutral"
+        else -> "fresh"
+    }
+    val monoBadgeLabel = when {
+        mono > 2.5 -> "Very high"
+        mono > 2.0 -> "High"
+        mono > 1.5 -> "Moderate"
+        else -> "Good variety"
+    }
+    val monoExplain = when {
+        mono > 2.0 -> "Training monotony > 2.0 (Foster 1998). Daily loads are too uniform \u2014 polarise your training with hard/easy variation to reduce injury and illness risk."
+        mono > 1.5 -> "Moderate monotony. Some variation exists, but consider adding more contrast between hard and easy days for better adaptation."
+        else -> "Good training variation. Your hard and easy days are well-differentiated, which supports recovery and reduces overuse risk."
+    }
+
     return template
         .replace("{{source}}", escapeHtml(source))
         .replace("{{ctl}}", format(snapshot.ctl))
@@ -321,6 +369,12 @@ private fun renderDashboard(
         .replace("{{stravaBar}}", stravaBar)
         .replace("{{loadChart}}", loadChart)
         .replace("{{volume}}", format(snapshot.recentVolumeMinutes))
+        .replace("{{acwr}}", "%.2f".format(snapshot.acwr))
+        .replace("{{acwrBadge}}", "<span class=\"badge $acwrBadgeClass\">$acwrBadgeLabel</span>")
+        .replace("{{acwrExplain}}", escapeHtml(acwrExplain))
+        .replace("{{monotony}}", "%.1f".format(snapshot.monotony))
+        .replace("{{monotonyBadge}}", "<span class=\"badge $monoBadgeClass\">$monoBadgeLabel</span>")
+        .replace("{{monotonyExplain}}", escapeHtml(monoExplain))
         .replace("{{legFeeling}}", state.checkIn.legFeeling.toString())
         .replace("{{mentalReadiness}}", state.checkIn.mentalReadiness.toString())
         .replace("{{timeAvailableMinutes}}", state.checkIn.timeAvailableMinutes.toString())

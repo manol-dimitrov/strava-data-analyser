@@ -55,6 +55,9 @@ data class LoadSnapshotResponse(
     val ctl: Double,
     val atl: Double,
     val tsb: Double,
+    val acwr: Double,
+    val monotony: Double,
+    val ctlRampRate: Double,
     val recentVolumeMinutes: Double,
     val series: List<LoadPointResponse>
 )
@@ -187,6 +190,9 @@ fun Application.module() {
                 ctl = snapshot.ctl,
                 atl = snapshot.atl,
                 tsb = snapshot.tsb,
+                acwr = snapshot.acwr,
+                monotony = snapshot.monotony,
+                ctlRampRate = snapshot.ctlRampRate,
                 recentVolumeMinutes = snapshot.recentVolumeMinutes,
                 series = snapshot.series.map {
                     LoadPointResponse(

@@ -20,7 +20,10 @@ data class WorkoutRequest(
     val currentTsb: Double,
     val currentCtl: Double,
     val currentAtl: Double,
-    val recentVolumeMinutes: Double
+    val recentVolumeMinutes: Double,
+    val acwr: Double,
+    val monotony: Double,
+    val ctlRampRate: Double
 )
 
 data class WorkoutPlan(
@@ -44,5 +47,8 @@ data class LoadSnapshot(
     val atl: Double,
     val tsb: Double,
     val recentVolumeMinutes: Double,
+    val acwr: Double,
+    val monotony: Double,
+    val ctlRampRate: Double,
     val series: List<LoadPoint>
 )
