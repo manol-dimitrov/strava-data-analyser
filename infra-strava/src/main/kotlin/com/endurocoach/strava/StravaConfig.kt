@@ -12,7 +12,7 @@ data class StravaConfig(
             val clientSecret = System.getenv("STRAVA_CLIENT_SECRET") ?: return null
             val redirectUri = System.getenv("STRAVA_REDIRECT_URI")
                 ?: inferCodespaceRedirectUri()
-                ?: "https://cautious-yodel-4jj699rqj6j3745x-8080.app.github.dev/api/strava/exchange"
+                ?: "http://localhost:8080/api/strava/exchange"
 
             return StravaConfig(
                 clientId = clientId,
