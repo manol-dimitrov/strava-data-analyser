@@ -23,7 +23,9 @@ data class WorkoutRequest(
     val recentVolumeMinutes: Double,
     val acwr: Double,
     val monotony: Double,
-    val ctlRampRate: Double
+    val ctlRampRate: Double,
+    val spike10: Double = 1.0,
+    val strain10: Double = 0.0
 )
 
 data class WorkoutPlan(
@@ -50,5 +52,11 @@ data class LoadSnapshot(
     val acwr: Double,
     val monotony: Double,
     val ctlRampRate: Double,
-    val series: List<LoadPoint>
+    val series: List<LoadPoint>,
+    /** Ratio of 10-day rolling total TRIMP to 10 × full-window average daily TRIMP.
+     *  Values > 1.3 indicate a recent load spike worth monitoring. */
+    val spike10: Double = 1.0,
+    /** Foster strain over the last 10 days: mean(last10 TRIMP) × monotony(last10).
+     *  Captures accumulated fatigue from both volume and uniformity. */
+    val strain10: Double = 0.0
 )

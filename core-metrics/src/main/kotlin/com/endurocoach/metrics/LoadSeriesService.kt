@@ -96,6 +96,26 @@ class LoadSeriesService(
             latest.ctl - series.first().ctl
         } else 0.0
 
+        // 10-day spike ratio — 10-day rolling sum vs 10 × full-window average daily TRIMP.
+        // Flags short-term load surges even when the 42/7-day ACWR looks safe.
+        val last10Trimps = series.takeLast(minOf(10, series.size)).map { it.trimp }
+        val windowAvgTrimp = if (series.isNotEmpty()) series.sumOf { it.trimp } / series.size else 0.0
+        val spike10 = if (windowAvgTrimp > 0.1) {
+            last10Trimps.sum() / (last10Trimps.size.toDouble() * windowAvgTrimp)
+        } else 1.0
+
+        // 10-day Foster strain — mean(last10 TRIMP) × monotony(last10).
+        val strain10 = if (last10Trimps.size >= 2) {
+            val mean10 = last10Trimps.average()
+            if (mean10 < 0.001) 0.0
+            else {
+                val variance10 = last10Trimps.sumOf { (it - mean10) * (it - mean10) } / last10Trimps.size
+                val sd10 = sqrt(variance10)
+                val mono10 = if (sd10 > 0.001) mean10 / sd10 else 0.0
+                mean10 * mono10
+            }
+        } else 0.0
+
         return LoadSnapshot(
             date = latest.date,
             ctl = latest.ctl,
@@ -105,16 +125,22 @@ class LoadSeriesService(
             acwr = acwr,
             monotony = monotony,
             ctlRampRate = ctlRampRate,
-            series = series
+            series = series,
+            spike10 = spike10,
+            strain10 = strain10
         )
     }
 
     private fun computeMonotony(dailyLoads: List<Double>): Double {
         if (dailyLoads.size < 2) return 0.0
+        
         val mean = dailyLoads.average()
+        
         if (mean < 0.001) return 0.0
+        
         val variance = dailyLoads.sumOf { (it - mean) * (it - mean) } / dailyLoads.size
         val sd = sqrt(variance)
+        
         return if (sd > 0.001) mean / sd else 0.0
     }
 }

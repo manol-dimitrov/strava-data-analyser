@@ -4,271 +4,634 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Enduro Coach</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
     <style>
         :root {
-            --bg: #f4f7ff;
-            --surface: #ffffff;
-            --border: #dbe3f0;
-            --text: #1a1d23;
-            --text-secondary: #5f6570;
-            --text-muted: #8b909a;
-            --accent: #3b82f6;
-            --accent-dark: #2563eb;
-            --fresh: #0d9f5f;
-            --fresh-bg: #e6f9f0;
-            --neutral-clr: #b8860b;
-            --neutral-bg: #fef8e8;
-            --fatigued: #d13438;
-            --fatigued-bg: #fde8e8;
-            --strava-orange: #fc4c02;
-            --radius: 14px;
-            --shadow-sm: 0 8px 24px rgba(30, 58, 138, .06);
-            --shadow-md: 0 12px 30px rgba(30, 58, 138, .12);
+            --bg: #F4F5F7;
+            --surface: #FFFFFF;
+            --border: #E8EAED;
+            --text: #1A1D23;
+            --text-secondary: #5F6570;
+            --text-muted: #9EA3AC;
+            --accent: #FC4C02;
+            --accent-dark: #D93E00;
+            --blue: #1A73E8;
+            --blue-light: #EBF2FD;
+            --blue-dark: #1557B0;
+            --fresh: #059669;
+            --fresh-bg: #ECFDF5;
+            --fresh-text: #065F46;
+            --neutral-clr: #D97706;
+            --neutral-bg: #FFFBEB;
+            --neutral-text: #92400E;
+            --fatigued: #DC2626;
+            --fatigued-bg: #FEF2F2;
+            --fatigued-text: #991B1B;
+            --radius-lg: 16px;
+            --radius-md: 10px;
+            --radius-sm: 8px;
+            --shadow-sm: 0 1px 4px rgba(0,0,0,.05), 0 1px 2px rgba(0,0,0,.04);
+            --shadow-md: 0 4px 16px rgba(0,0,0,.08), 0 1px 4px rgba(0,0,0,.04);
+            --topbar-h: 62px;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif; max-width: 1120px; margin: 0 auto; padding: 28px 20px; color: var(--text); background: radial-gradient(circle at top, #edf2ff 0%, #f4f7ff 45%, #f6f9ff 100%); line-height: 1.5; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            min-height: 100vh;
+        }
 
-        /* ---- Header ---- */
-        .header { margin-bottom: 24px; background: linear-gradient(120deg, #eef4ff, #f9fbff); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 22px; box-shadow: var(--shadow-sm); }
-        .header h1 { font-size: 30px; font-weight: 800; letter-spacing: -0.7px; color: #0f2354; }
-        .header .subtitle { color: var(--text-secondary); font-size: 14px; margin-top: 4px; }
+        /* ---- Topbar ---- */
+        .topbar {
+            position: sticky; top: 0; z-index: 100;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            height: var(--topbar-h);
+            display: flex; align-items: center;
+            padding: 0 28px;
+            gap: 16px;
+            box-shadow: 0 1px 6px rgba(0,0,0,.06);
+        }
+        .topbar-brand { display: flex; align-items: center; gap: 12px; flex: 1; }
+        .brand-icon {
+            width: 34px; height: 34px;
+            background: var(--accent);
+            border-radius: 9px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 13px; font-weight: 800; color: #fff; letter-spacing: -0.5px;
+        }
+        .brand-name { font-size: 16px; font-weight: 700; letter-spacing: -0.3px; }
+        .topbar-right { display: flex; align-items: center; gap: 12px; }
+        .strava-status { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--text-secondary); }
+        .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .dot.connected { background: var(--fresh); box-shadow: 0 0 0 3px var(--fresh-bg); }
+        .dot.disconnected { background: #D1D5DB; }
+        .btn-connect {
+            background: var(--accent); color: #fff;
+            padding: 8px 18px; border-radius: var(--radius-sm);
+            text-decoration: none; font-size: 13px; font-weight: 600;
+            transition: background .15s, transform .1s;
+            display: inline-block; white-space: nowrap;
+        }
+        .btn-connect:hover { background: var(--accent-dark); transform: translateY(-1px); }
+        .btn-disconnect {
+            font-size: 12px; color: var(--text-muted); text-decoration: none;
+            padding: 4px 10px; border-radius: var(--radius-sm);
+            transition: color .15s, background .15s;
+        }
+        .btn-disconnect:hover { color: var(--fatigued); background: var(--fatigued-bg); }
 
-        /* ---- Strava bar ---- */
-        .strava-bar { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 18px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; box-shadow: var(--shadow-sm); }
-        .strava-bar .status { font-size: 14px; color: var(--text-secondary); display: flex; align-items: center; gap: 8px; }
-        .strava-bar .dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
-        .strava-bar .dot.connected { background: var(--fresh); box-shadow: 0 0 0 3px var(--fresh-bg); }
-        .strava-bar .dot.disconnected { background: #ccc; }
-        .strava-bar a { background: var(--strava-orange); color: #fff; padding: 7px 16px; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600; transition: background .15s; }
-        .strava-bar a:hover { background: #e04400; }
+        /* ---- Welcome hero ---- */
+        .welcome-hero {
+            display: flex; flex-direction: column; align-items: center;
+            text-align: center;
+            padding: 80px 24px 60px;
+            max-width: 560px; margin: 0 auto;
+        }
+        .welcome-icon {
+            width: 64px; height: 64px;
+            background: var(--accent); border-radius: 18px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px; font-weight: 900; color: #fff;
+            letter-spacing: -0.5px; margin-bottom: 28px;
+            box-shadow: 0 8px 24px rgba(252,76,2,.2);
+        }
+        .welcome-title {
+            font-size: 32px; font-weight: 900; letter-spacing: -1px;
+            margin-bottom: 12px; line-height: 1.15;
+        }
+        .welcome-sub {
+            font-size: 15px; color: var(--text-secondary);
+            line-height: 1.7; margin-bottom: 32px;
+        }
+        .welcome-cta {
+            display: inline-flex; align-items: center; gap: 10px;
+            background: var(--accent); color: #fff;
+            padding: 14px 32px; border-radius: var(--radius-sm);
+            text-decoration: none; font-size: 16px; font-weight: 700;
+            transition: background .15s, transform .1s, box-shadow .15s;
+            box-shadow: 0 4px 14px rgba(252,76,2,.25);
+        }
+        .welcome-cta:hover {
+            background: var(--accent-dark); transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(252,76,2,.35);
+        }
+        .welcome-note {
+            font-size: 13px; color: var(--text-muted);
+            background: var(--bg); border: 1px solid var(--border);
+            border-radius: var(--radius-sm); padding: 14px 18px;
+            line-height: 1.6;
+        }
+        .welcome-note code {
+            font-size: 12px; background: #E8EAED; padding: 2px 6px;
+            border-radius: 4px; font-family: "SF Mono", Consolas, monospace;
+        }
+        .welcome-features {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 12px; margin-top: 40px; text-align: left; width: 100%;
+        }
+        .wf {
+            display: flex; align-items: center; gap: 10px;
+            font-size: 13px; color: var(--text-secondary);
+            padding: 10px 14px;
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+        }
+        .wf-icon { font-size: 16px; flex-shrink: 0; }
+        @media (max-width: 500px) {
+            .welcome-features { grid-template-columns: 1fr; }
+            .welcome-title { font-size: 26px; }
+        }
 
-        /* ---- Banister method explainer ---- */
-        .method-explainer { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 24px; margin-bottom: 24px; box-shadow: var(--shadow-sm); }
-        .method-explainer .method-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-        .method-explainer .method-icon { width: 36px; height: 36px; background: linear-gradient(135deg, var(--accent), #4a90d9); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 18px; font-weight: 700; flex-shrink: 0; }
-        .method-explainer h3 { font-size: 16px; font-weight: 700; }
-        .method-explainer .method-subtitle { font-size: 13px; color: var(--text-muted); font-weight: 400; }
-        .method-explainer .method-body { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-        .method-explainer .method-col p { font-size: 13px; color: var(--text-secondary); line-height: 1.65; }
-        .method-explainer .method-col p + p { margin-top: 8px; }
-        .method-formula { background: var(--bg); border-radius: 8px; padding: 14px 16px; margin-top: 12px; font-family: "SF Mono", SFMono-Regular, "Cascadia Code", Consolas, monospace; font-size: 13px; color: var(--text); text-align: center; line-height: 1.8; }
-        .method-formula .var { font-weight: 600; }
-        .method-formula .label { font-size: 11px; color: var(--text-muted); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+        /* ---- Page ---- */
+        .page { max-width: 1160px; margin: 0 auto; padding: 28px 22px 72px; }
 
-        /* ---- Metrics ---- */
-        .metrics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 24px; }
-        .metric-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; position: relative; box-shadow: var(--shadow-sm); transition: box-shadow .15s; }
-        .metric-card:hover { box-shadow: var(--shadow-md); }
-        .metric-card .metric-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
-        .metric-card .metric-value { font-size: 32px; font-weight: 800; line-height: 1.1; letter-spacing: -0.5px; }
-        .metric-card .metric-unit { font-size: 14px; font-weight: 400; color: var(--text-muted); }
-        .metric-card .metric-explain { font-size: 12px; color: var(--text-secondary); margin-top: 10px; line-height: 1.55; border-top: 1px solid var(--border); padding-top: 10px; }
-        .metric-card .metric-context { font-size: 11px; color: var(--text-muted); margin-top: 6px; font-style: italic; }
-        .info-details { margin-top: 8px; border-top: 1px dashed var(--border); padding-top: 8px; }
-        .info-summary { list-style: none; cursor: pointer; font-size: 11px; font-weight: 600; color: var(--accent-dark); display: inline-flex; align-items: center; gap: 6px; }
-        .info-summary:hover, .info-summary:focus-visible { color: var(--accent); }
-        .info-summary:focus-visible { outline: 2px solid rgba(37,99,235,.3); outline-offset: 2px; border-radius: 4px; }
-        .info-summary::-webkit-details-marker { display: none; }
-        .info-icon { width: 16px; height: 16px; border-radius: 50%; background: #e8f0ff; color: var(--accent-dark); display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
-        .info-content { margin-top: 6px; font-size: 11px; color: var(--text-muted); line-height: 1.6; font-style: italic; }
-        .badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; margin-top: 6px; letter-spacing: 0.2px; }
-        .badge.fresh { background: var(--fresh-bg); color: var(--fresh); }
-        .badge.neutral { background: var(--neutral-bg); color: var(--neutral-clr); }
-        .badge.fatigued { background: var(--fatigued-bg); color: var(--fatigued); }
-        .badge.demo-badge { background: #eef0f2; color: #5f6570; }
-        .badge.strava-badge { background: #fff2e6; color: #994400; }
+        /* ---- Hero card ---- */
+        .hero-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 28px 32px;
+            margin-bottom: 18px;
+            box-shadow: var(--shadow-sm);
+            display: flex; align-items: center; gap: 32px;
+            position: relative; overflow: hidden;
+        }
+        .hero-card::before {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0; height: 3px;
+            background: linear-gradient(90deg, var(--accent) 0%, var(--blue) 100%);
+        }
+        .hero-value-block { flex-shrink: 0; }
+        .hero-label {
+            font-size: 11px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 1px; color: var(--text-muted);
+            margin-bottom: 6px; display: flex; align-items: center; gap: 6px;
+        }
+        .hero-number {
+            font-size: 60px; font-weight: 900; line-height: 1;
+            letter-spacing: -3px; min-width: 120px;
+        }
+        .hero-number.positive   { color: var(--fresh); }
+        .hero-number.neutral    { color: var(--neutral-clr); }
+        .hero-number.negative-ok   { color: var(--blue); }
+        .hero-number.negative-risk { color: var(--fatigued); }
+        .hero-divider { width: 1px; height: 70px; background: var(--border); flex-shrink: 0; }
+        .hero-status { flex: 1; }
+        .hero-status-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            font-size: 13px; font-weight: 700;
+            padding: 5px 14px; border-radius: 20px; margin-bottom: 10px;
+        }
+        .hero-status-badge.fresh   { background: var(--fresh-bg); color: var(--fresh-text); }
+        .hero-status-badge.neutral { background: var(--neutral-bg); color: var(--neutral-text); }
+        .hero-status-badge.fatigued { background: var(--fatigued-bg); color: var(--fatigued-text); }
+        .hero-message { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+        .hero-sub { font-size: 13px; color: var(--text-secondary); line-height: 1.65; }
+
+        /* ---- Metric sections ---- */
+        /* ---- Metrics master grid (shared 12-col track) ---- */
+        .metrics-master {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            column-gap: 14px;
+            row-gap: 14px;
+            margin-bottom: 24px;
+            align-items: stretch;
+        }
+        .metrics-section-label {
+            grid-column: 1 / -1;
+            font-size: 11px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 1.2px; color: var(--text-muted);
+            padding-left: 2px; margin-bottom: 0;
+        }
+        .metrics-section-label:not(:first-child) { margin-top: 6px; }
+        .metric-card.span-4 { grid-column: span 4; }
+        .metric-card.span-3 { grid-column: span 3; }
+        .metric-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 20px 20px 18px;
+            box-shadow: var(--shadow-sm);
+            transition: box-shadow .15s, transform .15s;
+            display: flex; flex-direction: column;
+        }
+        .metric-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+        .metric-label {
+            font-size: 11px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.8px; color: var(--text-muted);
+            margin-bottom: 8px; display: flex; align-items: center; gap: 5px;
+        }
+        .metric-value { font-size: 30px; font-weight: 800; line-height: 1.1; letter-spacing: -0.8px; }
+        .metric-unit { font-size: 13px; font-weight: 500; color: var(--text-muted); }
+        .metric-explain {
+            font-size: 12px; color: var(--text-secondary);
+            margin-top: auto; padding-top: 10px; line-height: 1.6;
+            border-top: 1px solid var(--border);
+        }
+        .badge {
+            display: inline-flex; align-items: center;
+            font-size: 11px; font-weight: 700;
+            padding: 3px 10px; border-radius: 20px; margin-top: 8px;
+        }
+        .badge.fresh   { background: var(--fresh-bg); color: var(--fresh-text); }
+        .badge.neutral { background: var(--neutral-bg); color: var(--neutral-text); }
+        .badge.fatigued { background: var(--fatigued-bg); color: var(--fatigued-text); }
+        .badge.demo-badge { background: #F0F1F3; color: #6B7280; }
+        .badge.strava-badge { background: #FFF2E6; color: #994400; }
+
+        /* ---- Tooltip ---- */
+        .tip-wrap { position: relative; display: inline-flex; align-items: center; }
+        .tip-icon {
+            width: 14px; height: 14px; border-radius: 50%;
+            background: var(--border); color: var(--text-muted);
+            font-size: 9px; font-weight: 700;
+            display: inline-flex; align-items: center; justify-content: center;
+            cursor: help; font-style: normal; flex-shrink: 0;
+            line-height: 1;
+        }
+        .tip-box {
+            position: absolute; bottom: calc(100% + 7px);
+            left: 50%; transform: translateX(-50%);
+            background: #1A1D23; color: #F9FAFB;
+            font-size: 11px; font-weight: 400; font-style: normal;
+            padding: 7px 10px; border-radius: 8px;
+            width: 210px; text-align: left; line-height: 1.55;
+            pointer-events: none; opacity: 0; transition: opacity .18s;
+            z-index: 200; box-shadow: 0 6px 18px rgba(0,0,0,.22);
+        }
+        .tip-box::after {
+            content: ''; position: absolute; top: 100%; left: 50%;
+            transform: translateX(-50%);
+            border: 5px solid transparent; border-top-color: #1A1D23;
+        }
+        .tip-wrap:hover .tip-box { opacity: 1; }
+        /* Keep tooltips inside viewport on edge cards */
+        .metric-card.span-4:first-of-type .tip-box,
+        .metric-card.span-3:last-child .tip-box ~ .tip-box { left: 0; transform: none; }
+        .metric-card:last-child .tip-box { left: auto; right: 0; transform: none; }
+        .metric-card:last-child .tip-box::after { left: auto; right: 12px; transform: none; }
 
         /* ---- Chart ---- */
-        .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 24px; margin-bottom: 24px; box-shadow: var(--shadow-sm); }
-        .chart-card h3 { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
-        .chart-card .chart-subtitle { font-size: 12px; color: var(--text-muted); margin-bottom: 14px; }
+        .chart-card {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: var(--radius-lg); padding: 24px 28px;
+            margin-bottom: 18px; box-shadow: var(--shadow-sm);
+        }
+        .section-header { display: flex; align-items: baseline; gap: 10px; margin-bottom: 18px; }
+        .section-title { font-size: 16px; font-weight: 700; }
+        .section-sub { font-size: 12px; color: var(--text-muted); }
         .chart-card svg { width: 100%; height: auto; }
-        .chart-legend { display: flex; gap: 18px; margin-top: 12px; flex-wrap: wrap; }
-        .chart-legend span { font-size: 12px; color: var(--text-secondary); display: flex; align-items: center; gap: 5px; }
-        .chart-legend .swatch { width: 14px; height: 3px; border-radius: 2px; }
+        .chart-legend { display: flex; gap: 22px; margin-top: 14px; flex-wrap: wrap; }
+        .chart-legend span { font-size: 12px; color: var(--text-secondary); display: flex; align-items: center; gap: 6px; }
+        .chart-legend .swatch { width: 18px; height: 4px; border-radius: 2px; flex-shrink: 0; }
+        .chart-legend .swatch-dashed { width: 18px; height: 0; border-top: 3px dashed; border-radius: 0; flex-shrink: 0; }
 
         /* ---- Two-column layout ---- */
-        .layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow-sm); }
-        .card h2 { font-size: 17px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
-        .card h2 .card-icon { font-size: 20px; }
+        .layout { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; }
+        .card {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: var(--radius-lg); padding: 28px;
+            box-shadow: var(--shadow-sm);
+        }
+        .card-title { font-size: 16px; font-weight: 700; margin-bottom: 22px; display: flex; align-items: center; gap: 8px; }
+        .title-icon { font-size: 18px; }
 
         /* ---- Form ---- */
-        .form-group { margin-bottom: 14px; }
-        .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 5px; }
-        .form-group input, .form-group select { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; color: var(--text); background: var(--bg); transition: border-color .15s; }
-        .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(26,115,232,.12); }
-        .form-group .hint { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
-        .btn-row { display: flex; gap: 10px; margin-top: 18px; }
-        button { padding: 11px 20px; cursor: pointer; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; transition: all .15s; }
-        button[type="submit"] { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
-        button[type="submit"]:hover { background: #eceef1; }
-        button[formaction*="generate"] { background: var(--accent); color: #fff; }
-        button[formaction*="generate"]:hover { background: var(--accent-dark); }
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px; }
+        .slider-row { display: flex; align-items: center; gap: 12px; }
+        .slider-row input[type="range"] {
+            flex: 1; -webkit-appearance: none; height: 6px;
+            border-radius: 3px; background: var(--border); outline: none;
+        }
+        .slider-row input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 20px; height: 20px;
+            background: var(--accent); border-radius: 50%; cursor: pointer;
+            box-shadow: 0 2px 6px rgba(252,76,2,.35);
+            transition: transform .1s;
+        }
+        .slider-row input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.15); }
+        .slider-val { font-size: 14px; font-weight: 700; color: var(--text); min-width: 40px; text-align: right; }
+        .form-group input[type="number"],
+        .form-group select {
+            width: 100%; padding: 10px 14px;
+            border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+            font-size: 14px; color: var(--text); background: var(--bg);
+            font-family: 'Inter', sans-serif;
+            transition: border-color .15s;
+        }
+        .form-group input[type="number"]:focus,
+        .form-group select:focus {
+            outline: none; border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(252,76,2,.1);
+        }
+        .hint { font-size: 11px; color: var(--text-muted); margin-top: 5px; }
+        .btn-row { display: flex; flex-direction: column; gap: 10px; margin-top: 22px; }
+        .btn {
+            width: 100%; padding: 12px 18px; cursor: pointer; border: none;
+            border-radius: var(--radius-sm); font-size: 14px; font-weight: 600;
+            font-family: 'Inter', sans-serif; transition: all .15s; text-align: center;
+        }
+        .btn-primary { background: var(--accent); color: #fff; border: none; }
+        .btn-primary:hover {
+            background: var(--accent-dark); transform: translateY(-1px);
+            box-shadow: 0 4px 14px rgba(252,76,2,.3);
+        }
+        .btn-ghost {
+            background: transparent; color: var(--text-muted);
+            border: none; font-size: 13px; font-weight: 500;
+            text-decoration: underline; text-underline-offset: 3px;
+        }
+        .btn-ghost:hover { color: var(--text-secondary); }
 
-        /* ---- Workout ---- */
-        .workout-empty { color: var(--text-muted); font-size: 14px; text-align: center; padding: 32px 16px; }
-        .workout-empty .empty-icon { font-size: 36px; margin-bottom: 8px; }
-        .error { background: var(--fatigued-bg); border: 1px solid #f0b7b7; padding: 14px 16px; border-radius: 8px; margin-bottom: 14px; font-size: 14px; }
+        /* ---- Workout Prescription ---- */
+        .workout-empty { color: var(--text-muted); font-size: 14px; text-align: center; padding: 44px 16px; }
+        .workout-empty .empty-icon { font-size: 42px; margin-bottom: 12px; }
+        .workout-empty p { line-height: 1.7; }
+        .error { background: var(--fatigued-bg); border: 1px solid #FCA5A5; padding: 14px 18px; border-radius: var(--radius-sm); margin-bottom: 16px; font-size: 14px; }
         .error strong { color: var(--fatigued); }
-        .workout-section { margin-bottom: 16px; }
-        .workout-section .ws-header { display: flex; align-items: center; gap: 7px; margin-bottom: 6px; }
-        .workout-section .ws-icon { font-size: 16px; }
-        .workout-section .ws-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--accent); }
-        .workout-section p { font-size: 14px; line-height: 1.7; color: var(--text); }
-        .reasoning-block { background: linear-gradient(135deg, #f0f4f8, #e8ecf2); border-left: 3px solid var(--accent); padding: 16px 18px; border-radius: 0 8px 8px 0; margin-top: 16px; }
-        .reasoning-block .ws-header { margin-bottom: 8px; }
-        .reasoning-block .ws-label { color: var(--accent-dark); }
-        .reasoning-block p { font-size: 13px; line-height: 1.7; color: var(--text-secondary); }
-        .generated-at { font-size: 11px; color: var(--text-muted); margin-top: 12px; }
+        .workout-section { margin-bottom: 18px; padding-bottom: 18px; border-bottom: 1px solid var(--border); }
+        .workout-section:last-of-type { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        .ws-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+        .ws-icon { font-size: 15px; }
+        .ws-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--blue); }
+        .workout-section p { font-size: 14px; line-height: 1.75; color: var(--text); }
+        .reasoning-block {
+            background: var(--blue-light);
+            border-left: 3px solid var(--blue);
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            padding: 18px 20px; margin-top: 18px;
+        }
+        .reasoning-block .ws-label { color: var(--blue-dark); }
+        .reasoning-block p { font-size: 13px; line-height: 1.75; color: var(--text-secondary); }
+        .generated-at { font-size: 11px; color: var(--text-muted); margin-top: 14px; }
+
+        /* ---- Method disclosure ---- */
+        .method-disclosure { margin-top: 36px; }
+        .method-disclosure summary {
+            list-style: none; cursor: pointer;
+            font-size: 13px; color: var(--text-muted); font-weight: 500;
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 8px 2px; user-select: none;
+        }
+        .method-disclosure summary::-webkit-details-marker { display: none; }
+        .method-disclosure summary:hover { color: var(--text-secondary); }
+        .method-disclosure .chevron {
+            transition: transform .25s ease;
+            display: inline-flex; align-items: center;
+        }
+        .method-disclosure[open] .chevron { transform: rotate(180deg); }
+        .method-body-wrap {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: var(--radius-lg); padding: 26px 30px; margin-top: 12px;
+            box-shadow: var(--shadow-sm);
+        }
+        .method-body-wrap h3 { font-size: 15px; font-weight: 700; margin-bottom: 16px; }
+        .method-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 16px; }
+        .method-cols p { font-size: 13px; color: var(--text-secondary); line-height: 1.7; }
+        .method-cols p + p { margin-top: 8px; }
+        .method-formula {
+            background: var(--bg); border-radius: var(--radius-sm);
+            padding: 14px 16px;
+            font-family: "SF Mono", SFMono-Regular, "Cascadia Code", Consolas, monospace;
+            font-size: 12px; color: var(--text); text-align: center; line-height: 2.2;
+        }
 
         /* ---- Responsive ---- */
-        @media (max-width: 768px) {
-            .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+        @media (max-width: 960px) {
+            /* 4 training signals cards wrap to 2×2 */
+            .metric-card.span-3 { grid-column: span 6; }
+            .hero-card { flex-wrap: wrap; gap: 20px; }
+            .hero-sub { max-width: none; }
+        }
+        @media (max-width: 700px) {
+            /* all cards drop to 2-col */
+            .metric-card.span-4,
+            .metric-card.span-3 { grid-column: span 6; }
             .layout { grid-template-columns: 1fr; }
-            .method-explainer .method-body { grid-template-columns: 1fr; }
+            .hero-card { flex-direction: column; gap: 16px; align-items: flex-start; }
+            .hero-divider { display: none; }
+            .hero-number { font-size: 48px; }
+            .topbar { padding: 0 16px; }
+            .page { padding: 18px 14px 56px; }
+            .method-cols { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
 
-<div class="header">
-    <h1>Enduro Coach</h1>
-    <p class="subtitle">AI-powered session prescription built on the Banister impulse-response model</p>
-</div>
-
-{{stravaBar}}
-
-<!-- Banister Method Explainer -->
-<div class="method-explainer">
-    <div class="method-header">
-        <div class="method-icon">&Sigma;</div>
-        <div>
-            <h3>The Banister Impulse-Response Model</h3>
-            <span class="method-subtitle">The scientific foundation behind your training load analysis</span>
-        </div>
+<!-- Topbar -->
+<header class="topbar">
+    <div class="topbar-brand">
+        <div class="brand-icon">EC</div>
+        <span class="brand-name">Enduro Coach</span>
     </div>
-    <p class="method-subtitle">Built to be actionable first: you see clear readiness signals, and can expand technical modeling detail when needed.</p>
-    <details class="info-details">
-        <summary class="info-summary" aria-label="View detailed modeling methodology and formulas"><span class="info-icon">i</span> View modeling details and formulas</summary>
-        <div class="method-body">
-            <div class="method-col">
-                <p>Developed by <strong>Eric Banister</strong> and colleagues in the 1970s&ndash;80s, the impulse-response model treats each training session as an <em>impulse</em> that produces two competing biological responses: a <strong>fitness gain</strong> (slow-building, long-lasting) and a <strong>fatigue cost</strong> (fast-building, fast-decaying).</p>
-                <p>Your performance readiness at any moment is the difference between these two responses. This is the theoretical basis of periodisation. We extend it with <strong>Tim Gabbett&rsquo;s ACWR</strong> (acute:chronic workload ratio) and <strong>Carl Foster&rsquo;s training monotony</strong> for a more complete, modern picture.</p>
-            </div>
-            <div class="method-col">
-                <p>We quantify each session using <strong>zone-weighted TRIMP</strong> (Lucia et al. 2003) &mdash; a heart-rate-reserve measure that weights intensity by training zone rather than an exponential function. This avoids over-penalising moderate aerobic work.</p>
-                <p>Two exponential moving averages smooth the daily TRIMP: <strong>CTL</strong> tracks slow fitness (42-day), <strong>ATL</strong> tracks acute fatigue (7-day), and <strong>TSB</strong> reveals whether fitness or fatigue dominates. <strong>ACWR</strong> (ATL/CTL) flags safe loading zones per Gabbett&rsquo;s injury-risk research.</p>
-            </div>
+    <div class="topbar-right">
+        {{stravaBar}}
+    </div>
+</header>
+
+<div class="page">
+
+{{dashboardContent}}
+
+<!-- DASHBOARD_START -->
+
+<!-- Readiness Hero -->
+<div class="hero-card">
+    <div class="hero-value-block">
+        <div class="hero-label">
+            Readiness
+            <span class="tip-wrap">
+                <i class="tip-icon">i</i>
+                <span class="tip-box">Training Stress Balance (CTL &minus; ATL). Positive = fresh; negative during a build block is normal and productive.</span>
+            </span>
         </div>
-        <div class="method-formula">
-            <span class="var">TRIMP</span> = duration &times; %HRR &times; zone-weight &nbsp;&nbsp;|&nbsp;&nbsp;
-            <span class="var">CTL</span><sub class="label">today</sub> = CTL<sub class="label">yesterday</sub> + (TRIMP &minus; CTL<sub class="label">yesterday</sub>) / 42 &nbsp;&nbsp;|&nbsp;&nbsp;
-            <span class="var">TSB</span> = CTL &minus; ATL &nbsp;&nbsp;|&nbsp;&nbsp;
-            <span class="var">ACWR</span> = ATL / CTL
-        </div>
-    </details>
+        <div class="hero-number {{tsbHeroClass}}">{{tsb}}</div>
+    </div>
+    <div class="hero-divider"></div>
+    <div class="hero-status">
+        {{tsbHeroStatusBadge}}
+        <div class="hero-message">{{tsbHeroMessage}}</div>
+        <div class="hero-sub">{{tsbExplain}}</div>
+    </div>
 </div>
 
-<!-- Metrics -->
-<div class="metrics-grid">
-    <div class="metric-card">
-        <div class="metric-label">CTL &middot; Chronic Training Load</div>
+<!-- Metrics: shared 12-col grid so both rows align perfectly -->
+<div class="metrics-master">
+
+    <div class="metrics-section-label">Your Status</div>
+
+    <div class="metric-card span-4">
+        <div class="metric-label">
+            Fitness
+            <span class="tip-wrap"><i class="tip-icon">i</i><span class="tip-box">Chronic Training Load (CTL) &mdash; 42-day EMA of daily TRIMP. Your aerobic fitness base built over weeks of consistent training.</span></span>
+        </div>
         <div class="metric-value">{{ctl}}</div>
         {{ctlBadge}}
         <div class="metric-explain">{{ctlExplain}}</div>
-        <details class="info-details metric-context"><summary class="info-summary" aria-label="View CTL technical details"><span class="info-icon">i</span> View technical detail</summary><p class="info-content">42-day EMA of daily TRIMP. Reflects aerobic fitness built over weeks of consistent training. Rising CTL = improving fitness base.</p></details>
     </div>
-    <div class="metric-card">
-        <div class="metric-label">ATL &middot; Acute Training Load</div>
+    <div class="metric-card span-4">
+        <div class="metric-label">
+            Fatigue
+            <span class="tip-wrap"><i class="tip-icon">i</i><span class="tip-box">Acute Training Load (ATL) &mdash; 7-day EMA of daily TRIMP. Recent training stress; rises fast and fades fast.</span></span>
+        </div>
         <div class="metric-value">{{atl}}</div>
         {{atlBadge}}
         <div class="metric-explain">{{atlExplain}}</div>
-        <details class="info-details metric-context"><summary class="info-summary" aria-label="View ATL technical details"><span class="info-icon">i</span> View technical detail</summary><p class="info-content">7-day EMA of daily TRIMP. Represents recent training stress. Interpreted via ACWR (Gabbett) rather than raw magnitude.</p></details>
     </div>
-    <div class="metric-card">
-        <div class="metric-label">TSB &middot; Training Stress Balance</div>
-        <div class="metric-value">{{tsb}}</div>
-        {{tsbBadge}}
-        <div class="metric-explain">{{tsbExplain}}</div>
-        <details class="info-details metric-context"><summary class="info-summary" aria-label="View TSB technical details"><span class="info-icon">i</span> View technical detail</summary><p class="info-content">CTL &minus; ATL. Negative TSB during build blocks is expected and productive (Mujika &amp; Busso). Race-ready zone is typically +10 to +25.</p></details>
-    </div>
-    <div class="metric-card">
-        <div class="metric-label">ACWR &middot; Workload Ratio</div>
+    <div class="metric-card span-4">
+        <div class="metric-label">
+            Load Risk
+            <span class="tip-wrap"><i class="tip-icon">i</i><span class="tip-box">Acute:Chronic Workload Ratio (ACWR) &mdash; Gabbett (2016). Sweet spot 0.8&ndash;1.3. Above 1.5 = elevated injury risk.</span></span>
+        </div>
         <div class="metric-value">{{acwr}}</div>
         {{acwrBadge}}
         <div class="metric-explain">{{acwrExplain}}</div>
-        <details class="info-details metric-context"><summary class="info-summary" aria-label="View ACWR technical details"><span class="info-icon">i</span> View technical detail</summary><p class="info-content">Acute:Chronic Workload Ratio (Gabbett 2016). Sweet spot 0.8&ndash;1.3. Above 1.5 = elevated injury risk. Below 0.8 = undertraining.</p></details>
     </div>
-    <div class="metric-card">
-        <div class="metric-label">Monotony &middot; Load Variation</div>
+
+    <div class="metrics-section-label">Training Signals</div>
+
+    <div class="metric-card span-3">
+        <div class="metric-label">
+            Variety
+            <span class="tip-wrap"><i class="tip-icon">i</i><span class="tip-box">Training Monotony &mdash; Foster (1998). Mean &divide; SD of 7-day daily loads. Above 2.0 = day-to-day load is too uniform.</span></span>
+        </div>
         <div class="metric-value">{{monotony}}</div>
         {{monotonyBadge}}
         <div class="metric-explain">{{monotonyExplain}}</div>
-        <details class="info-details metric-context"><summary class="info-summary" aria-label="View monotony technical details"><span class="info-icon">i</span> View technical detail</summary><p class="info-content">Foster (1998): mean / SD of 7-day loads. Above 2.0 = insufficient hard/easy variation. Polarised training (Seiler) recommends strong contrast.</p></details>
     </div>
-    <div class="metric-card">
-        <div class="metric-label">7-Day Volume</div>
-        <div class="metric-value">{{volume}}<span class="metric-unit">min</span></div>
+    <div class="metric-card span-3">
+        <div class="metric-label">
+            Weekly Load
+            <span class="tip-wrap"><i class="tip-icon">i</i><span class="tip-box">Total training minutes across the last 7 days. All connected cardio activity types are included.</span></span>
+        </div>
+        <div class="metric-value">{{volume}}<span class="metric-unit"> min</span></div>
         {{volumeBadge}}
         <div class="metric-explain">{{volumeExplain}}</div>
-        <details class="info-details metric-context"><summary class="info-summary" aria-label="View 7-day volume technical details"><span class="info-icon">i</span> View technical detail</summary><p class="info-content">Total training duration in the last 7 days. Context for whether current load is typical, building, or in a recovery phase.</p></details>
     </div>
+    <div class="metric-card span-3">
+        <div class="metric-label">
+            Recent Spike
+            <span class="tip-wrap"><i class="tip-icon">i</i><span class="tip-box">10-day load ratio: 10-day rolling total &divide; (10 &times; full-window average daily TRIMP). Catches short-term surges even when the 42/7-day ACWR looks safe.</span></span>
+        </div>
+        <div class="metric-value">{{spike10}}</div>
+        {{spike10Badge}}
+        <div class="metric-explain">{{spike10Explain}}</div>
+    </div>
+    <div class="metric-card span-3">
+        <div class="metric-label">
+            10-day Strain
+            <span class="tip-wrap"><i class="tip-icon">i</i><span class="tip-box">Foster strain over 10 days: mean load &times; monotony. Captures accumulated fatigue from both volume and lack of variation over the recent block.</span></span>
+        </div>
+        <div class="metric-value">{{strain10}}</div>
+        {{strain10Badge}}
+        <div class="metric-explain">{{strain10Explain}}</div>
+    </div>
+
 </div>
 
-<!-- Load Chart -->
+<!-- Training Load Chart -->
 <div class="chart-card">
-    <h3>Training Load Curve</h3>
-    <p class="chart-subtitle">CTL (fitness), ATL (fatigue) and TSB (form) over the analysis window &middot; {{source}} {{sourceBadge}}</p>
+    <div class="section-header">
+        <span class="section-title">Training Load History</span>
+        <span class="section-sub">{{source}} {{sourceBadge}}</span>
+    </div>
     {{loadChart}}
     <div class="chart-legend">
-        <span><span class="swatch" style="background:var(--accent);"></span> CTL (Fitness)</span>
-        <span><span class="swatch" style="background:var(--strava-orange);"></span> ATL (Fatigue)</span>
-        <span><span class="swatch" style="background:var(--fresh); height:2px; border-top:1px dashed var(--fresh);"></span> TSB (Form)</span>
-        <span><span class="swatch" style="background:#ddd;"></span> Zero line</span>
+        <span><span class="swatch" style="background:#1A73E8;"></span> Fitness (CTL)</span>
+        <span><span class="swatch" style="background:#FC4C02;"></span> Fatigue (ATL)</span>
+        <span><span class="swatch-dashed" style="color:#059669;"></span> Readiness (TSB)</span>
     </div>
 </div>
 
-<!-- Check-in & Workout -->
+<!-- Check-in & Prescription -->
 <div class="layout">
+
     <div class="card">
-        <h2><span class="card-icon">&#x1F3CB;</span> Daily Check-in</h2>
+        <div class="card-title"><span class="title-icon">&#x1F3CB;</span> Today's Check-in</div>
         <form action="/dashboard/checkin" method="post">
             <div class="form-group">
-                <label>Leg feeling</label>
-                <input type="range" name="legFeeling" min="1" max="10" value="{{legFeeling}}" oninput="this.nextElementSibling.textContent=this.value+'/10'" required />
-                <span class="hint">{{legFeeling}}/10</span>
+                <label>How do your legs feel?</label>
+                <div class="slider-row">
+                    <input type="range" name="legFeeling" min="1" max="10" value="{{legFeeling}}"
+                           oninput="this.parentNode.querySelector('.slider-val').textContent=this.value+'/10'" />
+                    <span class="slider-val">{{legFeeling}}/10</span>
+                </div>
+                <div class="hint">1 = very heavy &nbsp;&middot;&nbsp; 10 = spring in your step</div>
             </div>
             <div class="form-group">
-                <label>Mental readiness</label>
-                <input type="range" name="mentalReadiness" min="1" max="10" value="{{mentalReadiness}}" oninput="this.nextElementSibling.textContent=this.value+'/10'" required />
-                <span class="hint">{{mentalReadiness}}/10</span>
+                <label>Mental energy</label>
+                <div class="slider-row">
+                    <input type="range" name="mentalReadiness" min="1" max="10" value="{{mentalReadiness}}"
+                           oninput="this.parentNode.querySelector('.slider-val').textContent=this.value+'/10'" />
+                    <span class="slider-val">{{mentalReadiness}}/10</span>
+                </div>
+                <div class="hint">1 = flat / unmotivated &nbsp;&middot;&nbsp; 10 = fired up</div>
             </div>
             <div class="form-group">
                 <label>Time available (minutes)</label>
-                <input type="number" name="timeAvailableMinutes" min="15" max="240" value="{{timeAvailableMinutes}}" required />
-                <span class="hint">15&ndash;240 minutes</span>
+                <input type="number" name="timeAvailableMinutes" min="15" max="240" value="{{timeAvailableMinutes}}" />
+                <div class="hint">How much time do you have for today's session?</div>
             </div>
             <div class="form-group">
-                <label>Coaching philosophy</label>
-                <select name="coachingPhilosophy">
-                    {{philosophyOptions}}
-                </select>
-                <span class="hint">Controls risk tolerance and intensity bias</span>
+                <label>Coaching approach</label>
+                <select name="coachingPhilosophy">{{philosophyOptions}}</select>
+                <div class="hint">Controls risk tolerance and intensity bias in the prescription</div>
             </div>
             <div class="btn-row">
-                <button type="submit">Save check-in</button>
-                <button type="submit" formaction="/dashboard/generate">Generate workout</button>
+                <button class="btn btn-primary" type="submit" formaction="/dashboard/generate">Get today's session &#x2192;</button>
+                <button class="btn btn-ghost" type="submit">Save check-in only</button>
             </div>
         </form>
     </div>
 
     <div class="card">
-        <h2><span class="card-icon">&#x1F4CB;</span> Workout Prescription</h2>
+        <div class="card-title"><span class="title-icon">&#x26A1;</span> Today's Session</div>
         {{errorCard}}
         {{workoutCard}}
     </div>
+
 </div>
 
+<!-- Method disclosure -->
+<details class="method-disclosure">
+    <summary><span class="chevron"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span> About the training science</summary>
+    <div class="method-body-wrap">
+        <h3>The Banister Impulse-Response Model</h3>
+        <div class="method-cols">
+            <div>
+                <p>Developed by <strong>Eric Banister</strong> in the 1970s&ndash;80s, the impulse-response model treats each training session as an <em>impulse</em> that creates two competing biological responses: a <strong>fitness gain</strong> (slow-building, long-lasting) and a <strong>fatigue cost</strong> (fast-building, fast-decaying). Your readiness at any moment is the net difference between the two.</p>
+                <p>Extended with <strong>Tim Gabbett&rsquo;s ACWR</strong> for injury risk management and <strong>Carl Foster&rsquo;s training monotony</strong> for load variation. Intensity is quantified using zone-weighted TRIMP (Lucia et al. 2003) &mdash; a heart-rate-reserve measure that avoids over-penalising moderate aerobic work.</p>
+            </div>
+            <div>
+                <p><strong>Fitness (CTL)</strong> &mdash; 42-day EMA of daily TRIMP. Your aerobic base built over sustained training.</p>
+                <p><strong>Fatigue (ATL)</strong> &mdash; 7-day EMA. Recent stress; rises fast and falls fast.</p>
+                <p><strong>Readiness (TSB)</strong> &mdash; CTL &minus; ATL. Negative during a build block is perfectly normal and productive. Race-ready zone: +10 to +25.</p>
+                <p><strong>Load Risk (ACWR)</strong> &mdash; ATL / CTL. Sweet spot 0.8&ndash;1.3. Above 1.5 = elevated injury risk per Gabbett (2016).</p>
+                <p><strong>Recent Spike &amp; 10-day Strain</strong> &mdash; Supplement ACWR by flagging short-window load surges and accumulated load &times; monotony over the last 10 days.</p>
+            </div>
+        </div>
+        <div class="method-formula">
+            TRIMP = duration &times; %HRR &times; zone-weight
+            &nbsp;&nbsp;|&nbsp;&nbsp;
+            CTL<sub>t</sub> = CTL<sub>t&minus;1</sub> + (TRIMP &minus; CTL<sub>t&minus;1</sub>) / 42
+            &nbsp;&nbsp;|&nbsp;&nbsp;
+            TSB = CTL &minus; ATL
+            &nbsp;&nbsp;|&nbsp;&nbsp;
+            ACWR = ATL / CTL
+        </div>
+    </div>
+</details>
+
+<!-- DASHBOARD_END -->
+
+</div><!-- /page -->
 </body>
 </html>

@@ -98,6 +98,8 @@ Training load state:
 - Training Monotony (Foster): ${"%.1f".format(request.monotony)} — above 2.0 suggests insufficient hard/easy variation
 - CTL Ramp Rate (weekly): ${"%.1f".format(request.ctlRampRate)} — above 5–7 AU/week is aggressive
 - Recent 7-day volume: ${"%.0f".format(request.recentVolumeMinutes)} minutes
+- 10-day Spike Ratio: ${"%.2f".format(request.spike10)} — ratio of 10-day rolling load to the full-window daily average baseline; above 1.3 warrants monitoring, above 1.5 is a concern even if standard ACWR looks safe
+- 10-day Strain (Foster): ${"%.0f".format(request.strain10)} — accumulated load × monotony over 10 days; above 700 is high and suggests the athlete is carrying both volume and insufficient variation
 
 Prescription requirements:
 - warmup: Specific warm-up protocol with exact durations, drills, and progressive effort cues (RPE, pace zones, or HR zones). Include dynamic mobility if appropriate.

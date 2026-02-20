@@ -37,7 +37,7 @@ class StravaActivityRepository(
         }.body<List<StravaActivityDto>>()
 
         return activities
-            .filter { it.type.equals("Run", ignoreCase = true) }
+            .filter { CARDIO_ACTIVITY_TYPES.contains(it.type.lowercase()) }
             .map {
                 Activity(
                     date = Instant.parse(it.startDate).atZone(ZoneOffset.UTC).toLocalDate(),
@@ -45,5 +45,17 @@ class StravaActivityRepository(
                     avgHeartRate = it.averageHeartRate?.toInt()
                 )
             }
+    }
+
+    companion object {
+        /** Cardio activity types included in training load calculations.
+         *  TRIMP is HR-based so all types normalise correctly via BanisterTrimpCalculator. */
+        private val CARDIO_ACTIVITY_TYPES = setOf(
+            "run", "trailrun", "virtualrun",
+            "ride", "virtualride", "ebikeride",
+            "hike", "walk",
+            "swim", "openwatersports",
+            "nordicski", "rowing"
+        )
     }
 }

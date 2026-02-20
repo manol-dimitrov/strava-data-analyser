@@ -67,4 +67,19 @@ class EncryptedFileTokenStoreTest {
         store.saveToken("unicode", unicode)
         assertEquals(unicode, store.loadToken("unicode"))
     }
-}
+    @Test
+    fun deleteTokenRemovesFile() {
+        val store = tempStore()
+        store.saveToken("to_delete", "some-token-data")
+        assertEquals("some-token-data", store.loadToken("to_delete"))
+        store.deleteToken("to_delete")
+        assertNull(store.loadToken("to_delete"))
+    }
+
+    @Test
+    fun deleteTokenNoOpForMissingKey() {
+        val store = tempStore()
+        // Should not throw
+        store.deleteToken("nonexistent_key")
+        assertNull(store.loadToken("nonexistent_key"))
+    }}

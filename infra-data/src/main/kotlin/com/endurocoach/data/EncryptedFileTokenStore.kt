@@ -37,6 +37,11 @@ class EncryptedFileTokenStore(
         outputFile.writeText(Base64.getEncoder().encodeToString(payload), Charsets.UTF_8)
     }
 
+    override fun deleteToken(key: String) {
+        val file = File(baseDir, "$key.enc")
+        if (file.exists()) file.delete()
+    }
+
     override fun loadToken(key: String): String? {
         val inputFile = File(baseDir, "$key.enc")
         if (!inputFile.exists()) {

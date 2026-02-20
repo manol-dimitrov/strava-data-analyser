@@ -81,10 +81,36 @@ fun Route.installDashboardRoutes(dependencies: DashboardDependencies) {
             call.response.cookies.append(name = SESSION_COOKIE, value = session.id, path = "/", maxAge = SESSION_MAX_AGE)
         }
 
-        val state = session.dashboardState.read()
+        // Check for a valid persisted token
         val hasToken = dependencies.tokenStore.loadToken(session.tokenStoreKey) != null
-        val stravaConnected = dependencies.stravaConfigured && hasToken
+        var stravaConnected = dependencies.stravaConfigured && hasToken
 
+        // If we think we have a token, validate it (catches revoked / expired-unrefreshable tokens)
+        if (stravaConnected && session.oauthService != null) {
+            stravaConnected = runCatching { session.oauthService.validAccessToken() }
+                .map { true }
+                .getOrElse {
+                    // Token is stale — clean it up
+                    dependencies.tokenStore.deleteToken(session.tokenStoreKey)
+                    session.activityRepository?.invalidate()
+                    false
+                }
+        }
+
+        // ----- GATE: unauthenticated users see the welcome hero -----
+        if (!stravaConnected) {
+            val stravaAuthUrl = session.oauthService?.buildAuthorizationUrl(state = session.id)
+            val html = renderWelcome(
+                template = dependencies.templateHtml,
+                stravaConfigured = dependencies.stravaConfigured,
+                stravaAuthUrl = stravaAuthUrl
+            )
+            call.respondText(html, ContentType.Text.Html)
+            return@get
+        }
+
+        // ----- Authenticated: load data and render the full dashboard -----
+        val state = session.dashboardState.read()
         val (source, snapshot) = dependencies.loadProvider(session.activityRepository)
 
         val html = renderDashboard(
@@ -93,8 +119,8 @@ fun Route.installDashboardRoutes(dependencies: DashboardDependencies) {
             source = source,
             snapshot = snapshot,
             philosophyRulePacks = dependencies.philosophyRulePacks,
-            stravaConnected = stravaConnected,
-            stravaConfigured = dependencies.stravaConfigured
+            stravaConnected = true,
+            stravaAuthUrl = null
         )
 
         call.respondText(html, ContentType.Text.Html)
@@ -138,7 +164,9 @@ fun Route.installDashboardRoutes(dependencies: DashboardDependencies) {
             recentVolumeMinutes = snapshot.recentVolumeMinutes,
             acwr = snapshot.acwr,
             monotony = snapshot.monotony,
-            ctlRampRate = snapshot.ctlRampRate
+            ctlRampRate = snapshot.ctlRampRate,
+            spike10 = snapshot.spike10,
+            strain10 = snapshot.strain10
         )
 
         runCatching { dependencies.llmClient.generateWorkoutPlan(request) }
@@ -170,6 +198,56 @@ private fun parseCheckIn(
     )
 }
 
+/**
+ * Render the welcome / landing page for unauthenticated visitors.
+ * The template {{dashboardContent}} block is replaced with the welcome hero,
+ * and all metric/chart tokens are replaced with empty strings so they don't
+ * leak raw {{token}} text.
+ */
+private fun renderWelcome(
+    template: String,
+    stravaConfigured: Boolean,
+    stravaAuthUrl: String?
+): String {
+    val connectButton = if (stravaAuthUrl != null) {
+        """<a class="welcome-cta" href="${escapeHtml(stravaAuthUrl)}">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13.5 6L10 13l-2-4H4l6 11 6-11h-2.5z" fill="currentColor"/></svg>
+    Connect with Strava
+</a>"""
+    } else {
+        """<p class="welcome-note">Strava integration is not configured. Set <code>STRAVA_CLIENT_ID</code> and <code>STRAVA_CLIENT_SECRET</code> environment variables to enable.</p>"""
+    }
+
+    val welcomeHtml = """
+<div class="welcome-hero">
+    <div class="welcome-icon">EC</div>
+    <h1 class="welcome-title">Enduro Coach</h1>
+    <p class="welcome-sub">Science-backed training load monitoring and AI-powered daily workout prescriptions — built on the Banister impulse-response model, Gabbett ACWR, and Foster strain metrics.</p>
+    $connectButton
+    <div class="welcome-features">
+        <div class="wf"><span class="wf-icon">&#x1F4CA;</span><span>Fitness, fatigue &amp; readiness tracking</span></div>
+        <div class="wf"><span class="wf-icon">&#x26A1;</span><span>10-day spike &amp; strain alerts</span></div>
+        <div class="wf"><span class="wf-icon">&#x1F3CB;</span><span>AI-generated daily sessions</span></div>
+        <div class="wf"><span class="wf-icon">&#x1F6B4;</span><span>All cardio activities supported</span></div>
+    </div>
+</div>
+""".trimIndent()
+
+    val welcomeStravaBar = if (!stravaConfigured) {
+        """<span class="strava-status"><span class="dot disconnected"></span>Not configured</span>"""
+    } else {
+        """<span class="strava-status"><span class="dot disconnected"></span>Not connected</span>"""
+    }
+
+    return template
+        .replace("{{stravaBar}}", welcomeStravaBar)
+        .replace("{{dashboardContent}}", welcomeHtml)
+        // Remove the authenticated dashboard content between markers
+        .replace(Regex("<!-- DASHBOARD_START -->.*<!-- DASHBOARD_END -->", RegexOption.DOT_MATCHES_ALL), "")
+        // Zero out any remaining tokens (metric values, badges, etc.)
+        .replace(Regex("\\{\\{[a-zA-Z0-9]+}}"), "")
+}
+
 private fun renderDashboard(
     template: String,
     state: DashboardState,
@@ -177,7 +255,7 @@ private fun renderDashboard(
     snapshot: LoadSnapshot,
     philosophyRulePacks: Map<String, String>,
     stravaConnected: Boolean = false,
-    stravaConfigured: Boolean = false
+    stravaAuthUrl: String? = null
 ): String {
     val options = philosophyRulePacks.keys.joinToString("\n") { key ->
         val selected = if (state.checkIn.coachingPhilosophy == key) "selected" else ""
@@ -295,16 +373,14 @@ private fun renderDashboard(
         "<span class=\"badge demo-badge\">Demo data</span>"
     }
 
+    // Topbar-inline strava status (no wrapping div — rendered inside .topbar-right)
     val stravaBar = if (stravaConnected) {
-        if (source == "strava") {
-            """<div class="strava-bar"><span class="status"><span class="dot connected"></span>Strava connected \u2014 using your activity data</span></div>"""
-        } else {
-            """<div class="strava-bar"><span class="status"><span class="dot connected"></span>Strava connected \u2014 no recent activities, showing demo data</span></div>"""
-        }
-    } else if (stravaConfigured) {
-        """<div class="strava-bar"><span class="status"><span class="dot disconnected"></span>Strava not connected</span><a href="/api/strava/connect">Connect Strava</a></div>"""
+        val statusText = if (source == "strava") "Cardio activities synced" else "Connected — no recent activities"
+        """<span class="strava-status"><span class="dot connected"></span>$statusText</span><a class="btn-disconnect" href="/api/strava/disconnect">Disconnect</a>"""
+    } else if (stravaAuthUrl != null) {
+        """<span class="strava-status"><span class="dot disconnected"></span>Not connected</span><a class="btn-connect" href="${escapeHtml(stravaAuthUrl)}">Connect Strava</a>"""
     } else {
-        """<div class="strava-bar"><span class="status"><span class="dot disconnected"></span>Strava not configured \u2014 using demo data</span></div>"""
+        """<span class="strava-status"><span class="dot disconnected"></span>Demo mode</span>"""
     }
 
     // SVG load chart
@@ -344,10 +420,66 @@ private fun renderDashboard(
         else -> "Good variety"
     }
     val monoExplain = when {
-        mono > 2.0 -> "Training monotony > 2.0 (Foster 1998). Daily loads are too uniform \u2014 polarise your training with hard/easy variation to reduce injury and illness risk."
+        mono > 2.0 -> "Training monotony > 2.0 (Foster 1998). Daily loads are too uniform — polarise your training with hard/easy variation to reduce injury and illness risk."
         mono > 1.5 -> "Moderate monotony. Some variation exists, but consider adding more contrast between hard and easy days for better adaptation."
         else -> "Good training variation. Your hard and easy days are well-differentiated, which supports recovery and reduces overuse risk."
     }
+
+    // 10-day spike ratio badge
+    val spike10 = snapshot.spike10
+    val spike10BadgeClass = when {
+        spike10 > 1.5 -> "fatigued"
+        spike10 > 1.3 -> "neutral"
+        spike10 > 0.8 -> "fresh"
+        else -> "neutral"
+    }
+    val spike10BadgeLabel = when {
+        spike10 > 1.5 -> "Spike risk"
+        spike10 > 1.3 -> "Elevated"
+        spike10 > 0.8 -> "Normal"
+        else -> "Low"
+    }
+    val spike10Explain = when {
+        spike10 > 1.5 -> "10-day load is significantly above your daily average (×${{"%.2f".format(spike10)}}). Short-term spikes above 1.5× baseline elevate injury risk even when ACWR looks safe."
+        spike10 > 1.3 -> "10-day load is moderately above baseline (×${{"%.2f".format(spike10)}}). Manageable during a planned build block but don't sustain for more than 1–2 weeks."
+        spike10 > 0.8 -> "10-day load is well-matched to your training baseline (×${{"%.2f".format(spike10)}}). Good progressive loading."
+        else -> "10-day load is below your typical baseline (×${{"%.2f".format(spike10)}}). Planned recovery or returning from a break."
+    }
+
+    // 10-day Foster strain badge
+    val strain10 = snapshot.strain10
+    val strain10BadgeClass = when {
+        strain10 > 700 -> "fatigued"
+        strain10 > 400 -> "neutral"
+        else -> "fresh"
+    }
+    val strain10BadgeLabel = when {
+        strain10 > 700 -> "High strain"
+        strain10 > 400 -> "Moderate"
+        else -> "Low"
+    }
+    val strain10Explain = when {
+        strain10 > 700 -> "High 10-day strain (${{"%.0f".format(strain10)}}). Accumulated load combined with low variety is elevated. Prioritise hard/easy contrast and ensure sleep quality."
+        strain10 > 400 -> "Moderate 10-day strain (${{"%.0f".format(strain10)}}). Training is productive but watch for compounding fatigue if this persists."
+        else -> "Low strain (${{"%.0f".format(strain10)}}). Good hard/easy variation and manageable load over the recent 10 days."
+    }
+
+    // Hero card supplementary vars
+    val tsbHeroClass = when {
+        tsb > 10 -> "positive"
+        tsb > 0 -> "neutral"
+        tsb > -20 -> "negative-ok"
+        else -> "negative-risk"
+    }
+    val tsbHeroMessage = when {
+        tsb > 25 -> "Keep it steady — your fitness base may be fading"
+        tsb > 10 -> "Primed to push hard or race"
+        tsb > 0 -> "Fresh with solid fitness — a good day to perform"
+        tsb > -10 -> "In the build zone — this is where improvement happens"
+        tsb > -25 -> "Deep build phase — recovery quality matters now"
+        else -> "Heavy load — factor in a recovery week soon"
+    }
+    val tsbHeroStatusBadge = "<div class=\"hero-status-badge $tsbBadgeClass\">$tsbBadgeLabel</div>"
 
     return template
         .replace("{{source}}", escapeHtml(source))
@@ -356,6 +488,9 @@ private fun renderDashboard(
         .replace("{{tsb}}", format(snapshot.tsb))
         .replace("{{tsbBadge}}", "<span class=\"badge $tsbBadgeClass\">$tsbBadgeLabel</span>")
         .replace("{{tsbExplain}}", escapeHtml(tsbExplain))
+        .replace("{{tsbHeroClass}}", tsbHeroClass)
+        .replace("{{tsbHeroMessage}}", escapeHtml(tsbHeroMessage))
+        .replace("{{tsbHeroStatusBadge}}", tsbHeroStatusBadge)
         .replace("{{ctlBadge}}", "<span class=\"badge $ctlBadgeClass\">$ctlBadgeLabel</span>")
         .replace("{{ctlExplain}}", escapeHtml(ctlExplain))
         .replace("{{atlBadge}}", "<span class=\"badge $atlBadgeClass\">$atlBadgeLabel</span>")
@@ -372,12 +507,22 @@ private fun renderDashboard(
         .replace("{{monotony}}", "%.1f".format(snapshot.monotony))
         .replace("{{monotonyBadge}}", "<span class=\"badge $monoBadgeClass\">$monoBadgeLabel</span>")
         .replace("{{monotonyExplain}}", escapeHtml(monoExplain))
+        .replace("{{spike10}}", "%.2f".format(snapshot.spike10))
+        .replace("{{spike10Badge}}", "<span class=\"badge $spike10BadgeClass\">$spike10BadgeLabel</span>")
+        .replace("{{spike10Explain}}", escapeHtml(spike10Explain))
+        .replace("{{strain10}}", "%.0f".format(snapshot.strain10))
+        .replace("{{strain10Badge}}", "<span class=\"badge $strain10BadgeClass\">$strain10BadgeLabel</span>")
+        .replace("{{strain10Explain}}", escapeHtml(strain10Explain))
         .replace("{{legFeeling}}", state.checkIn.legFeeling.toString())
         .replace("{{mentalReadiness}}", state.checkIn.mentalReadiness.toString())
         .replace("{{timeAvailableMinutes}}", state.checkIn.timeAvailableMinutes.toString())
         .replace("{{philosophyOptions}}", options)
         .replace("{{workoutCard}}", workoutCard)
         .replace("{{errorCard}}", errorCard)
+        // dashboardContent is only used by the welcome flow; in the full dashboard it's a no-op
+        .replace("{{dashboardContent}}", "")
+        .replace("<!-- DASHBOARD_START -->", "")
+        .replace("<!-- DASHBOARD_END -->", "")
 }
 
 private fun format(value: Double): String = "%.1f".format(value)

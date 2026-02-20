@@ -24,6 +24,11 @@ class CachedActivityRepository(
         return fetched
     }
 
+    /** Clear the activity cache so the next call fetches fresh data. */
+    fun invalidate() {
+        cache = null
+    }
+
     private data class CacheEntry(
         val days: Int,
         val activities: List<Activity>,

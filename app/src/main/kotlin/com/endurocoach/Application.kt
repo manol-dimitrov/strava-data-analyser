@@ -166,6 +166,20 @@ fun Application.module() {
             }
         }
 
+        get("/api/strava/disconnect") {
+            val sessionId = call.request.cookies[SESSION_COOKIE]
+            if (sessionId != null) {
+                val session = sessionRegistry.get(sessionId)
+                if (session != null) {
+                    tokenStore.deleteToken(session.tokenStoreKey)
+                    session.activityRepository?.invalidate()
+                }
+            }
+            // Expire the session cookie so a fresh session is created on next visit
+            call.response.cookies.append(name = SESSION_COOKIE, value = "", path = "/", maxAge = 0L)
+            call.respondRedirect("/")
+        }
+
         get("/api/load") {
             val days = call.request.queryParameters["days"]?.toIntOrNull()?.coerceIn(7, 120) ?: 45
             val maxHr = call.request.queryParameters["maxHr"]?.toIntOrNull()?.coerceIn(120, 230) ?: 190
@@ -278,14 +292,8 @@ private suspend fun selectActivities(
     }
 
     return runCatching { repository.getActivitiesLastDays(days) }
-        .map { list ->
-            if (list.isEmpty()) {
-                "demo" to DemoActivityGenerator.generate(days = days)
-            } else {
-                "strava" to list
-            }
-        }
+        .map { list -> "strava" to list }
         .getOrElse {
-            "demo" to DemoActivityGenerator.generate(days = days)
+            "strava" to emptyList()
         }
 }

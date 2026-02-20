@@ -11,4 +11,5 @@ interface LlmStructuredClient {
 interface TokenStore {
     fun saveToken(key: String, tokenJson: String)
     fun loadToken(key: String): String?
+    fun deleteToken(key: String)
 }
