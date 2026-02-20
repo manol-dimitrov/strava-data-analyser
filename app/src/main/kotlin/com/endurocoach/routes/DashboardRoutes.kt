@@ -3,8 +3,13 @@ package com.endurocoach.routes
 import com.endurocoach.domain.DailyCheckIn
 import com.endurocoach.domain.LlmStructuredClient
 import com.endurocoach.domain.LoadSnapshot
+import com.endurocoach.domain.TokenStore
 import com.endurocoach.domain.WorkoutPlan
 import com.endurocoach.domain.WorkoutRequest
+import com.endurocoach.session.SESSION_COOKIE
+import com.endurocoach.session.SESSION_MAX_AGE
+import com.endurocoach.session.SessionRegistry
+import com.endurocoach.strava.CachedActivityRepository
 import io.ktor.http.ContentType
 import io.ktor.server.request.receiveParameters
 import io.ktor.server.response.respondRedirect
@@ -60,52 +65,71 @@ class DashboardStateStore {
 
 data class DashboardDependencies(
     val templateHtml: String,
-    val stateStore: DashboardStateStore,
     val llmClient: LlmStructuredClient,
     val philosophyRulePacks: Map<String, String>,
-    val loadProvider: suspend () -> Pair<String, LoadSnapshot>,
-    val stravaConnected: Boolean = false,
-    val stravaAuthUrl: String? = null
+    val sessionRegistry: SessionRegistry,
+    val stravaConfigured: Boolean = false,
+    val tokenStore: TokenStore,
+    val loadProvider: suspend (CachedActivityRepository?) -> Pair<String, LoadSnapshot>
 )
 
 fun Route.installDashboardRoutes(dependencies: DashboardDependencies) {
     get("/") {
-        val state = dependencies.stateStore.read()
-        val sourceAndSnapshot = dependencies.loadProvider()
-        val source = sourceAndSnapshot.first
-        val snapshot = sourceAndSnapshot.second
+        val sessionId = call.request.cookies[SESSION_COOKIE]
+        val session = dependencies.sessionRegistry.getOrCreate(sessionId)
+        if (sessionId != session.id) {
+            call.response.cookies.append(name = SESSION_COOKIE, value = session.id, path = "/", maxAge = SESSION_MAX_AGE)
+        }
+
+        val state = session.dashboardState.read()
+        val hasToken = dependencies.tokenStore.loadToken(session.tokenStoreKey) != null
+        val stravaConnected = dependencies.stravaConfigured && hasToken
+        val stravaAuthUrl = if (!stravaConnected) {
+            session.oauthService?.buildAuthorizationUrl(state = session.id)
+        } else null
+
+        val (source, snapshot) = dependencies.loadProvider(session.activityRepository)
+
         val html = renderDashboard(
             template = dependencies.templateHtml,
             state = state,
             source = source,
             snapshot = snapshot,
             philosophyRulePacks = dependencies.philosophyRulePacks,
-            stravaConnected = dependencies.stravaConnected,
-            stravaAuthUrl = dependencies.stravaAuthUrl
+            stravaConnected = stravaConnected,
+            stravaAuthUrl = stravaAuthUrl
         )
 
         call.respondText(html, ContentType.Text.Html)
     }
 
     post("/dashboard/checkin") {
+        val sessionId = call.request.cookies[SESSION_COOKIE]
+        val session = dependencies.sessionRegistry.getOrCreate(sessionId)
+        if (sessionId != session.id) {
+            call.response.cookies.append(name = SESSION_COOKIE, value = session.id, path = "/", maxAge = SESSION_MAX_AGE)
+        }
         val parsed = parseCheckIn(
             params = call.receiveParameters(),
             philosophyRulePacks = dependencies.philosophyRulePacks
         )
-        dependencies.stateStore.updateCheckIn(parsed)
+        session.dashboardState.updateCheckIn(parsed)
         call.respondRedirect("/")
     }
 
     post("/dashboard/generate") {
+        val sessionId = call.request.cookies[SESSION_COOKIE]
+        val session = dependencies.sessionRegistry.getOrCreate(sessionId)
+        if (sessionId != session.id) {
+            call.response.cookies.append(name = SESSION_COOKIE, value = session.id, path = "/", maxAge = SESSION_MAX_AGE)
+        }
         val parsed = parseCheckIn(
             params = call.receiveParameters(),
             philosophyRulePacks = dependencies.philosophyRulePacks
         )
-        dependencies.stateStore.updateCheckIn(parsed)
+        session.dashboardState.updateCheckIn(parsed)
 
-        val sourceAndSnapshot = dependencies.loadProvider()
-        val source = sourceAndSnapshot.first
-        val snapshot = sourceAndSnapshot.second
+        val (source, snapshot) = dependencies.loadProvider(session.activityRepository)
         val request = WorkoutRequest(
             checkIn = parsed.copy(
                 coachingPhilosophy = dependencies.philosophyRulePacks[parsed.coachingPhilosophy]
@@ -118,9 +142,9 @@ fun Route.installDashboardRoutes(dependencies: DashboardDependencies) {
         )
 
         runCatching { dependencies.llmClient.generateWorkoutPlan(request) }
-            .onSuccess { dependencies.stateStore.updateWorkout(source, it) }
+            .onSuccess { session.dashboardState.updateWorkout(source, it) }
             .onFailure {
-                dependencies.stateStore.updateError(
+                session.dashboardState.updateError(
                     source,
                     it.message ?: "Workout generation failed"
                 )
@@ -265,10 +289,14 @@ private fun renderDashboard(
         "<span class=\"badge demo-badge\">Demo data</span>"
     }
 
-    val stravaBar = if (source == "strava") {
-        """<div class="strava-bar"><span class="status"><span class="dot connected"></span>Strava connected \u2014 using real activity data</span></div>"""
+    val stravaBar = if (stravaConnected) {
+        if (source == "strava") {
+            """<div class="strava-bar"><span class="status"><span class="dot connected"></span>Strava connected \u2014 using your activity data</span></div>"""
+        } else {
+            """<div class="strava-bar"><span class="status"><span class="dot connected"></span>Strava connected \u2014 no recent activities, showing demo data</span></div>"""
+        }
     } else if (stravaAuthUrl != null) {
-        """<div class="strava-bar"><span class="status"><span class="dot disconnected"></span>Strava not connected \u2014 using demo data</span><a href="${escapeHtml(stravaAuthUrl)}">Connect Strava</a></div>"""
+        """<div class="strava-bar"><span class="status"><span class="dot disconnected"></span>Strava not connected</span><a href="${escapeHtml(stravaAuthUrl)}">Connect Strava</a></div>"""
     } else {
         """<div class="strava-bar"><span class="status"><span class="dot disconnected"></span>Strava not configured \u2014 using demo data</span></div>"""
     }

@@ -14,13 +14,13 @@ import com.endurocoach.llm.GeminiConfig
 import com.endurocoach.llm.PerplexityClient
 import com.endurocoach.llm.PerplexityConfig
 import com.endurocoach.routes.DashboardDependencies
-import com.endurocoach.routes.DashboardStateStore
 import com.endurocoach.routes.installDashboardRoutes
+import com.endurocoach.session.SESSION_COOKIE
+import com.endurocoach.session.SESSION_MAX_AGE
+import com.endurocoach.session.SessionRegistry
 import com.endurocoach.strava.CachedActivityRepository
 import com.endurocoach.strava.HttpClientFactory
-import com.endurocoach.strava.StravaActivityRepository
 import com.endurocoach.strava.StravaConfig
-import com.endurocoach.strava.StravaOAuthService
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.engine.embeddedServer
@@ -68,37 +68,26 @@ fun Application.module() {
     val httpClient = HttpClientFactory.create()
     val tokenStore = EncryptedFileTokenStore()
     val stravaConfig = StravaConfig.fromEnv()
-    val stravaOAuthService = stravaConfig?.let {
-        StravaOAuthService(
-            config = it,
-            tokenStore = tokenStore,
-            httpClient = httpClient
-        )
-    }
-    val stravaActivityRepository = stravaOAuthService?.let {
-        CachedActivityRepository(
-            delegate = StravaActivityRepository(
-                authService = it,
-                httpClient = httpClient
-            )
-        )
-    }
     val llmClient = createLlmClient(runtimeConfig, httpClient)
-    val dashboardStateStore = DashboardStateStore()
     val dashboardTemplate = loadTemplate("templates/dashboard.html")
+    val sessionRegistry = SessionRegistry(
+        stravaConfig = stravaConfig,
+        tokenStore = tokenStore,
+        httpClient = httpClient
+    )
 
     routing {
         installDashboardRoutes(
             DashboardDependencies(
                 templateHtml = dashboardTemplate,
-                stateStore = dashboardStateStore,
                 llmClient = llmClient,
                 philosophyRulePacks = runtimeConfig.philosophyRulePacks,
-                stravaConnected = stravaConfig != null,
-                stravaAuthUrl = stravaOAuthService?.buildAuthorizationUrl(),
-                loadProvider = {
+                sessionRegistry = sessionRegistry,
+                stravaConfigured = stravaConfig != null,
+                tokenStore = tokenStore,
+                loadProvider = { repo ->
                     buildLoadSnapshot(
-                        repository = stravaActivityRepository,
+                        repository = repo,
                         days = 45,
                         maxHr = 190,
                         restingHr = 50
@@ -115,22 +104,32 @@ fun Application.module() {
             if (stravaConfig == null) {
                 call.respond(mapOf("connected" to false, "reason" to "Missing STRAVA_* environment variables"))
             } else {
-                call.respond(mapOf("connected" to true))
+                val sessionId = call.request.cookies[SESSION_COOKIE]
+                val session = sessionRegistry.getOrCreate(sessionId)
+                val hasToken = tokenStore.loadToken(session.tokenStoreKey) != null
+                call.respond(mapOf("connected" to hasToken))
             }
         }
 
         get("/api/strava/auth-url") {
-            val oauth = stravaOAuthService
+            val sessionId = call.request.cookies[SESSION_COOKIE]
+            val session = sessionRegistry.getOrCreate(sessionId)
+            if (sessionId != session.id) {
+                call.response.cookies.append(name = SESSION_COOKIE, value = session.id, path = "/", maxAge = SESSION_MAX_AGE)
+            }
+            val oauth = session.oauthService
             if (oauth == null) {
                 call.respond(mapOf("error" to "Strava is not configured"))
             } else {
-                call.respond(mapOf("url" to oauth.buildAuthorizationUrl()))
+                call.respond(mapOf("url" to oauth.buildAuthorizationUrl(state = session.id)))
             }
         }
 
         get("/api/strava/exchange") {
-            val oauth = stravaOAuthService
             val code = call.request.queryParameters["code"]
+            val state = call.request.queryParameters["state"]
+            val session = sessionRegistry.getOrCreate(state)
+            val oauth = session.oauthService
 
             if (oauth == null) {
                 call.respond(mapOf("ok" to false, "error" to "Strava is not configured"))
@@ -143,16 +142,24 @@ fun Application.module() {
             }
 
             runCatching { oauth.exchangeCode(code) }
-                .onSuccess { call.respondRedirect("/") }
+                .onSuccess {
+                    call.response.cookies.append(name = SESSION_COOKIE, value = session.id, path = "/", maxAge = SESSION_MAX_AGE)
+                    call.respondRedirect("/")
+                }
                 .onFailure { call.respond(mapOf("ok" to false, "error" to (it.message ?: "Token exchange failed"))) }
         }
 
         get("/api/strava/connect") {
-            val oauth = stravaOAuthService
+            val sessionId = call.request.cookies[SESSION_COOKIE]
+            val session = sessionRegistry.getOrCreate(sessionId)
+            if (sessionId != session.id) {
+                call.response.cookies.append(name = SESSION_COOKIE, value = session.id, path = "/", maxAge = SESSION_MAX_AGE)
+            }
+            val oauth = session.oauthService
             if (oauth == null) {
                 call.respond(mapOf("ok" to false, "error" to "Strava is not configured"))
             } else {
-                call.respondRedirect(oauth.buildAuthorizationUrl())
+                call.respondRedirect(oauth.buildAuthorizationUrl(state = session.id))
             }
         }
 
@@ -161,8 +168,11 @@ fun Application.module() {
             val maxHr = call.request.queryParameters["maxHr"]?.toIntOrNull()?.coerceIn(120, 230) ?: 190
             val restingHr = call.request.queryParameters["restingHr"]?.toIntOrNull()?.coerceIn(30, 90) ?: 50
 
+            val sessionId = call.request.cookies[SESSION_COOKIE]
+            val session = sessionRegistry.getOrCreate(sessionId)
+
             val sourceAndSnapshot = buildLoadSnapshot(
-                repository = stravaActivityRepository,
+                repository = session.activityRepository,
                 days = days,
                 maxHr = maxHr,
                 restingHr = restingHr
