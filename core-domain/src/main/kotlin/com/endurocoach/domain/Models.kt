@@ -5,7 +5,13 @@ import java.time.LocalDate
 data class Activity(
     val date: LocalDate,
     val durationMinutes: Double,
-    val avgHeartRate: Int?
+    val avgHeartRate: Int?,
+    val name: String? = null,
+    val type: String? = null,
+    val distanceMeters: Double? = null,
+    val maxHeartRate: Int? = null,
+    val elevationGain: Double? = null,
+    val movingMinutes: Double = durationMinutes  // Moving time; defaults to elapsed time
 )
 
 data class DailyCheckIn(

@@ -42,7 +42,13 @@ class StravaActivityRepository(
                 Activity(
                     date = Instant.parse(it.startDate).atZone(ZoneOffset.UTC).toLocalDate(),
                     durationMinutes = it.elapsedTimeSeconds.toDouble() / 60.0,
-                    avgHeartRate = it.averageHeartRate?.toInt()
+                    avgHeartRate = it.averageHeartRate?.toInt(),
+                    name = it.name,
+                    type = it.type,
+                    distanceMeters = it.distance,
+                    maxHeartRate = it.maxHeartRate?.toInt(),
+                    elevationGain = it.totalElevationGain,
+                    movingMinutes = (it.movingTimeSeconds ?: it.elapsedTimeSeconds).toDouble() / 60.0
                 )
             }
     }

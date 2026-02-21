@@ -197,6 +197,7 @@ fun Application.module() {
 
             val source = sourceAndSnapshot.first
             val snapshot = sourceAndSnapshot.second
+            // sourceAndSnapshot.third = activities (not needed for JSON API)
 
             val response = LoadSnapshotResponse(
                 source = source,
@@ -233,13 +234,13 @@ private suspend fun buildLoadSnapshot(
     days: Int,
     maxHr: Int,
     restingHr: Int
-): Pair<String, LoadSnapshot> {
+): Triple<String, LoadSnapshot, List<Activity>> {
     val sourceWithActivities = selectActivities(repository = repository, days = days)
     val source = sourceWithActivities.first
     val activities = sourceWithActivities.second
     val trimpCalculator = BanisterTrimpCalculator(maxHeartRate = maxHr, restingHeartRate = restingHr)
     val snapshot = LoadSeriesService(trimpCalculator).buildSnapshot(activities = activities, days = days)
-    return source to snapshot
+    return Triple(source, snapshot, activities)
 }
 
 private fun createLlmClient(

@@ -10,8 +10,8 @@ data class StravaConfig(
         fun fromEnv(): StravaConfig? {
             val clientId = System.getenv("STRAVA_CLIENT_ID") ?: return null
             val clientSecret = System.getenv("STRAVA_CLIENT_SECRET") ?: return null
-            val redirectUri = System.getenv("STRAVA_REDIRECT_URI")
-                ?: inferCodespaceRedirectUri()
+            val redirectUri = inferCodespaceRedirectUri()
+                ?: System.getenv("STRAVA_REDIRECT_URI")
                 ?: "http://localhost:8080/api/strava/exchange"
 
             return StravaConfig(

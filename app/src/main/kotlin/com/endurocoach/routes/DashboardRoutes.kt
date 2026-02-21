@@ -10,6 +10,7 @@ import com.endurocoach.session.SESSION_COOKIE
 import com.endurocoach.session.SESSION_MAX_AGE
 import com.endurocoach.session.SessionRegistry
 import com.endurocoach.strava.CachedActivityRepository
+import com.endurocoach.metrics.BanisterTrimpCalculator
 import io.ktor.http.ContentType
 import io.ktor.server.request.receiveParameters
 import io.ktor.server.response.respondRedirect
@@ -70,7 +71,7 @@ data class DashboardDependencies(
     val sessionRegistry: SessionRegistry,
     val stravaConfigured: Boolean = false,
     val tokenStore: TokenStore,
-    val loadProvider: suspend (CachedActivityRepository?) -> Pair<String, LoadSnapshot>
+    val loadProvider: suspend (CachedActivityRepository?) -> Triple<String, LoadSnapshot, List<com.endurocoach.domain.Activity>>
 )
 
 fun Route.installDashboardRoutes(dependencies: DashboardDependencies) {
@@ -111,13 +112,14 @@ fun Route.installDashboardRoutes(dependencies: DashboardDependencies) {
 
         // ----- Authenticated: load data and render the full dashboard -----
         val state = session.dashboardState.read()
-        val (source, snapshot) = dependencies.loadProvider(session.activityRepository)
+        val (source, snapshot, activities) = dependencies.loadProvider(session.activityRepository)
 
         val html = renderDashboard(
             template = dependencies.templateHtml,
             state = state,
             source = source,
             snapshot = snapshot,
+            activities = activities,
             philosophyRulePacks = dependencies.philosophyRulePacks,
             stravaConnected = true,
             stravaAuthUrl = null
@@ -152,7 +154,7 @@ fun Route.installDashboardRoutes(dependencies: DashboardDependencies) {
         )
         session.dashboardState.updateCheckIn(parsed)
 
-        val (source, snapshot) = dependencies.loadProvider(session.activityRepository)
+        val (source, snapshot, _) = dependencies.loadProvider(session.activityRepository)
         val request = WorkoutRequest(
             checkIn = parsed.copy(
                 coachingPhilosophy = dependencies.philosophyRulePacks[parsed.coachingPhilosophy]
@@ -253,6 +255,7 @@ private fun renderDashboard(
     state: DashboardState,
     source: String,
     snapshot: LoadSnapshot,
+    activities: List<com.endurocoach.domain.Activity>,
     philosophyRulePacks: Map<String, String>,
     stravaConnected: Boolean = false,
     stravaAuthUrl: String? = null
@@ -386,6 +389,9 @@ private fun renderDashboard(
     // SVG load chart
     val loadChart = renderLoadChart(snapshot)
 
+    // Recent workouts strip
+    val workoutsStrip = renderWorkoutsStrip(activities)
+
     // ACWR badge
     val acwrBadgeClass = when {
         acwr > 1.5 -> "fatigued"
@@ -440,10 +446,10 @@ private fun renderDashboard(
         else -> "Low"
     }
     val spike10Explain = when {
-        spike10 > 1.5 -> "10-day load is significantly above your daily average (×${{"%.2f".format(spike10)}}). Short-term spikes above 1.5× baseline elevate injury risk even when ACWR looks safe."
-        spike10 > 1.3 -> "10-day load is moderately above baseline (×${{"%.2f".format(spike10)}}). Manageable during a planned build block but don't sustain for more than 1–2 weeks."
-        spike10 > 0.8 -> "10-day load is well-matched to your training baseline (×${{"%.2f".format(spike10)}}). Good progressive loading."
-        else -> "10-day load is below your typical baseline (×${{"%.2f".format(spike10)}}). Planned recovery or returning from a break."
+        spike10 > 1.5 -> "10-day load is significantly above your daily average (×${"%.2f".format(spike10)}). Short-term spikes above 1.5× baseline elevate injury risk even when ACWR looks safe."
+        spike10 > 1.3 -> "10-day load is moderately above baseline (×${"%.2f".format(spike10)}). Manageable during a planned build block but don't sustain for more than 1–2 weeks."
+        spike10 > 0.8 -> "10-day load is well-matched to your training baseline (×${"%.2f".format(spike10)}). Good progressive loading."
+        else -> "10-day load is below your typical baseline (×${"%.2f".format(spike10)}). Planned recovery or returning from a break."
     }
 
     // 10-day Foster strain badge
@@ -459,9 +465,9 @@ private fun renderDashboard(
         else -> "Low"
     }
     val strain10Explain = when {
-        strain10 > 700 -> "High 10-day strain (${{"%.0f".format(strain10)}}). Accumulated load combined with low variety is elevated. Prioritise hard/easy contrast and ensure sleep quality."
-        strain10 > 400 -> "Moderate 10-day strain (${{"%.0f".format(strain10)}}). Training is productive but watch for compounding fatigue if this persists."
-        else -> "Low strain (${{"%.0f".format(strain10)}}). Good hard/easy variation and manageable load over the recent 10 days."
+        strain10 > 700 -> "High 10-day strain (${"%.0f".format(strain10)}). Accumulated load combined with low variety is elevated. Prioritise hard/easy contrast and ensure sleep quality."
+        strain10 > 400 -> "Moderate 10-day strain (${"%.0f".format(strain10)}). Training is productive but watch for compounding fatigue if this persists."
+        else -> "Low strain (${"%.0f".format(strain10)}). Good hard/easy variation and manageable load over the recent 10 days."
     }
 
     // Hero card supplementary vars
@@ -491,6 +497,7 @@ private fun renderDashboard(
         .replace("{{tsbHeroClass}}", tsbHeroClass)
         .replace("{{tsbHeroMessage}}", escapeHtml(tsbHeroMessage))
         .replace("{{tsbHeroStatusBadge}}", tsbHeroStatusBadge)
+        .replace("{{workoutsStrip}}", workoutsStrip)
         .replace("{{ctlBadge}}", "<span class=\"badge $ctlBadgeClass\">$ctlBadgeLabel</span>")
         .replace("{{ctlExplain}}", escapeHtml(ctlExplain))
         .replace("{{atlBadge}}", "<span class=\"badge $atlBadgeClass\">$atlBadgeLabel</span>")
@@ -608,3 +615,113 @@ private fun renderLoadChart(snapshot: LoadSnapshot): String {
 }
 
 private fun fmt2(v: Double): String = "%.1f".format(v)
+
+private fun renderWorkoutsStrip(activities: List<com.endurocoach.domain.Activity>): String {
+    if (activities.isEmpty()) {
+        return """<div class="workouts-card">
+    <div class="section-header"><span class="section-title">Recent Workouts</span></div>
+    <div class="workouts-empty">No activities in the analysis window.</div>
+</div>"""
+    }
+
+    val trimpCalc = BanisterTrimpCalculator()
+    // Sort most recent first, limit to 30
+    val sorted = activities.sortedByDescending { it.date }.take(30)
+
+    // Find max TRIMP for bar scaling
+    val allTrimps = sorted.map { trimpCalc.calculate(it.durationMinutes, it.avgHeartRate) }
+    val maxTrimp = allTrimps.maxOrNull()?.coerceAtLeast(1.0) ?: 1.0
+
+    val cards = sorted.mapIndexed { i, a ->
+        val trimp = allTrimps[i]
+        val typeIcon = when (a.type?.lowercase()) {
+            "run", "trailrun", "virtualrun" -> "\uD83C\uDFC3"
+            "ride", "virtualride", "ebikeride" -> "\uD83D\uDEB4"
+            "swim" -> "\uD83C\uDFCA"
+            "hike" -> "\u26F0\uFE0F"
+            "walk" -> "\uD83D\uDEB6"
+            "nordicski" -> "\u26F7\uFE0F"
+            "rowing" -> "\uD83D\uDEA3"
+            else -> "\uD83C\uDFCB\uFE0F"
+        }
+        val name = escapeHtml(a.name ?: a.type ?: "Activity")
+        val dateStr = "${a.date.dayOfMonth} ${a.date.month.name.lowercase().replaceFirstChar { it.uppercase() }.take(3)}"
+
+        // Distance
+        val dist = a.distanceMeters
+        val distStr = if (dist != null && dist > 0) {
+            "${"%.1f".format(dist / 1000.0)} km"
+        } else "—"
+
+        // Duration h:mm
+        val durationTotal = a.durationMinutes.toInt()
+        val durStr = if (durationTotal >= 60) "${durationTotal / 60}h ${durationTotal % 60}m" else "${durationTotal}m"
+
+        // Pace: Strava-style display
+        // Runs/hikes/walks → min/km | Swims → min/100m | Rides/ski → km/h
+        val actType = a.type?.lowercase() ?: ""
+        val isRunType = actType in setOf("run", "trailrun", "virtualrun", "hike", "walk")
+        val isSwim = actType in setOf("swim", "openwatersports")
+        val paceStr = if (dist != null && dist > 0 && a.movingMinutes > 0) {
+            when {
+                isRunType -> {
+                    val minPerKm = a.movingMinutes / (dist / 1000.0)
+                    val paceMin = minPerKm.toInt()
+                    val paceSec = ((minPerKm - paceMin) * 60).toInt()
+                    "$paceMin:%02d /km".format(paceSec)
+                }
+                isSwim -> {
+                    val minPer100m = a.movingMinutes / (dist / 100.0)
+                    val paceMin = minPer100m.toInt()
+                    val paceSec = ((minPer100m - paceMin) * 60).toInt()
+                    "$paceMin:%02d /100m".format(paceSec)
+                }
+                else -> {
+                    val kmh = (dist / 1000.0) / (a.movingMinutes / 60.0)
+                    "${"%.1f".format(kmh)} km/h"
+                }
+            }
+        } else "—"
+
+        // HR
+        val hrStr = if (a.avgHeartRate != null) "${a.avgHeartRate} bpm" else "—"
+
+        // TRIMP bar color
+        val trimpPct = (trimp / maxTrimp * 100).coerceIn(0.0, 100.0)
+        val trimpColor = when {
+            trimp > 200 -> "var(--fatigued)"
+            trimp > 100 -> "var(--neutral-clr)"
+            else -> "var(--fresh)"
+        }
+
+        """<div class="workout-item">
+    <div class="wi-header">
+        <span class="wi-type-icon">$typeIcon</span>
+        <div>
+            <div class="wi-name">$name</div>
+            <div class="wi-date">$dateStr</div>
+        </div>
+    </div>
+    <div class="wi-stats">
+        <div class="wi-stat"><div class="wi-stat-label">Distance</div><div class="wi-stat-value">$distStr</div></div>
+        <div class="wi-stat"><div class="wi-stat-label">Duration</div><div class="wi-stat-value">$durStr</div></div>
+        <div class="wi-stat"><div class="wi-stat-label">Pace</div><div class="wi-stat-value">$paceStr</div></div>
+        <div class="wi-stat"><div class="wi-stat-label">Avg HR</div><div class="wi-stat-value">$hrStr</div></div>
+    </div>
+    <div class="wi-trimp-row">
+        <div class="wi-trimp-bar"><div class="wi-trimp-fill" style="width:${"%.0f".format(trimpPct)}%;background:$trimpColor;"></div></div>
+        <span class="wi-trimp-val" style="color:$trimpColor;">${"%.0f".format(trimp)}</span>
+    </div>
+</div>"""
+    }.joinToString("\n")
+
+    return """<div class="workouts-card">
+    <div class="section-header">
+        <span class="section-title">Recent Workouts</span>
+        <span class="section-sub">${sorted.size} activities</span>
+    </div>
+    <div class="workouts-scroll">
+$cards
+    </div>
+</div>"""
+}

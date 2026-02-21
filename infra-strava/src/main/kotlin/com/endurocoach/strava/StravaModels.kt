@@ -31,7 +31,12 @@ data class StravaTokenRefreshRequest(
 data class StravaActivityDto(
     val id: Long,
     val type: String,
+    val name: String? = null,
     @SerialName("start_date") val startDate: String,
     @SerialName("elapsed_time") val elapsedTimeSeconds: Int,
-    @SerialName("average_heartrate") val averageHeartRate: Double? = null
+    @SerialName("moving_time") val movingTimeSeconds: Int? = null,
+    val distance: Double? = null,
+    @SerialName("average_heartrate") val averageHeartRate: Double? = null,
+    @SerialName("max_heartrate") val maxHeartRate: Double? = null,
+    @SerialName("total_elevation_gain") val totalElevationGain: Double? = null
 )
