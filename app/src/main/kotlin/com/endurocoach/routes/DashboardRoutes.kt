@@ -354,7 +354,11 @@ private fun renderWelcome(
 
     val welcomeHtml = """
 <div class="welcome-hero anim-in">
-    <div class="welcome-icon">M</div>
+    <div class="welcome-icon">
+        <svg width="42" height="26" viewBox="0 0 42 26" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M1 13H7.5L11 1.5L15.5 24.5L21 0.5L26.5 24.5L31 1.5L34.5 13H41" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    </div>
     <h1 class="welcome-title">Maestro</h1>
     <p class="welcome-sub">Your AI Endurance Coach &mdash; science-backed training load analysis and intelligent daily workout prescriptions built on the Banister impulse-response model.</p>
     $connectButton
@@ -805,7 +809,7 @@ private fun renderLoadChart(snapshot: LoadSnapshot): String {
     val yLabels = (0..ySteps).map { i ->
         val v = minVal + (safeRange * i / ySteps)
         val y = yPos(v)
-        """<text x="${fmt2(padL - 6)}" y="${fmt2(y + 3.5)}" text-anchor="end" fill="#7E91B4" font-size="10">${"%.0f".format(v)}</text>"""
+        """<text x="${fmt2(padL - 6)}" y="${fmt2(y + 3.5)}" text-anchor="end" fill="#9078C0" font-size="10">${"%.0f".format(v)}</text>"""
     }.joinToString("\n    ")
 
     // X-axis date labels (show ~6 labels)
@@ -814,7 +818,7 @@ private fun renderLoadChart(snapshot: LoadSnapshot): String {
         val idx = if (labelCount <= 1) 0 else i * (series.size - 1) / (labelCount - 1)
         val x = xPos(idx)
         val dateStr = series[idx].date.let { "${it.monthValue}/${it.dayOfMonth}" }
-        """<text x="${fmt2(x)}" y="${fmt2(h - 4)}" text-anchor="middle" fill="#7E91B4" font-size="10">$dateStr</text>"""
+        """<text x="${fmt2(x)}" y="${fmt2(h - 4)}" text-anchor="middle" fill="#9078C0" font-size="10">$dateStr</text>"""
     }.joinToString("\n    ")
 
     val ctlLine = polyline(series.map { it.ctl }, "#1a73e8", 2.2)
@@ -824,7 +828,7 @@ private fun renderLoadChart(snapshot: LoadSnapshot): String {
     return """
 <svg viewBox="0 0 ${w.toInt()} ${h.toInt()}" xmlns="http://www.w3.org/2000/svg" style="font-family:'IBM Plex Sans',sans-serif;">
     <!-- Grid line at zero -->
-    <line x1="${fmt2(padL)}" y1="$zeroY" x2="${fmt2(w - padR)}" y2="$zeroY" stroke="rgba(191,210,247,.15)" stroke-width="1" stroke-dasharray="4,3"/>
+    <line x1="${fmt2(padL)}" y1="$zeroY" x2="${fmt2(w - padR)}" y2="$zeroY" stroke="rgba(179,157,255,.15)" stroke-width="1" stroke-dasharray="4,3"/>
     <!-- Y labels -->
     $yLabels
     <!-- X labels -->
