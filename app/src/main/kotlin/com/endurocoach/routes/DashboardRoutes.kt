@@ -213,8 +213,7 @@ private fun renderWelcome(
 ): String {
     val connectButton = if (stravaAuthUrl != null) {
         """<a class="welcome-cta" href="${escapeHtml(stravaAuthUrl)}">
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13.5 6L10 13l-2-4H4l6 11 6-11h-2.5z" fill="currentColor"/></svg>
-    Connect with Strava
+    <img src="https://developers.strava.com/images/btn_strava_connectwith_orange.svg" alt="Connect with Strava" />
 </a>"""
     } else {
         """<p class="welcome-note">Strava integration is not configured. Set <code>STRAVA_CLIENT_ID</code> and <code>STRAVA_CLIENT_SECRET</code> environment variables to enable.</p>"""
@@ -222,14 +221,15 @@ private fun renderWelcome(
 
     val welcomeHtml = """
 <div class="welcome-hero">
-    <div class="welcome-icon">EC</div>
-    <h1 class="welcome-title">Enduro Coach</h1>
-    <p class="welcome-sub">Science-backed training load monitoring and AI-powered daily workout prescriptions — built on the Banister impulse-response model, Gabbett ACWR, and Foster strain metrics.</p>
+    <div class="welcome-icon">M</div>
+    <h1 class="welcome-title">Maestro</h1>
+    <p class="welcome-sub">Your AI Endurance Coach &mdash; science-backed training load analysis and intelligent daily workout prescriptions built on the Banister impulse-response model.</p>
     $connectButton
+    <div class="strava-powered"><img src="https://developers.strava.com/images/logos/strava_powered_by_light.svg" alt="Powered by Strava" /></div>
     <div class="welcome-features">
         <div class="wf"><span class="wf-icon">&#x1F4CA;</span><span>Fitness, fatigue &amp; readiness tracking</span></div>
         <div class="wf"><span class="wf-icon">&#x26A1;</span><span>10-day spike &amp; strain alerts</span></div>
-        <div class="wf"><span class="wf-icon">&#x1F3CB;</span><span>AI-generated daily sessions</span></div>
+        <div class="wf"><span class="wf-icon">&#x1F9E0;</span><span>AI-generated daily prescriptions</span></div>
         <div class="wf"><span class="wf-icon">&#x1F6B4;</span><span>All cardio activities supported</span></div>
     </div>
 </div>
@@ -381,7 +381,7 @@ private fun renderDashboard(
         val statusText = if (source == "strava") "Cardio activities synced" else "Connected — no recent activities"
         """<span class="strava-status"><span class="dot connected"></span>$statusText</span><a class="btn-disconnect" href="/api/strava/disconnect">Disconnect</a>"""
     } else if (stravaAuthUrl != null) {
-        """<span class="strava-status"><span class="dot disconnected"></span>Not connected</span><a class="btn-connect" href="${escapeHtml(stravaAuthUrl)}">Connect Strava</a>"""
+        """<span class="strava-status"><span class="dot disconnected"></span>Not connected</span><a class="btn-connect" href="${escapeHtml(stravaAuthUrl)}"><img src="https://developers.strava.com/images/btn_strava_connectwith_orange.svg" alt="Connect with Strava" /></a>"""
     } else {
         """<span class="strava-status"><span class="dot disconnected"></span>Demo mode</span>"""
     }

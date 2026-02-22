@@ -100,7 +100,96 @@ fun Application.module() {
         )
 
         get("/health") {
-            call.respondText("enduro-coach scaffold is running")
+            call.respondText("maestro scaffold is running")
+        }
+
+        get("/privacy") {
+            val html = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Privacy Policy — Maestro</title>
+<style>
+    body { font-family: 'Inter', -apple-system, sans-serif; background: #030408; color: #F0F4FA; max-width: 680px; margin: 0 auto; padding: 40px 20px; line-height: 1.75; }
+    h1 { font-size: 28px; margin-bottom: 8px; }
+    h2 { font-size: 18px; margin-top: 28px; margin-bottom: 8px; color: #C8D6F0; }
+    p { font-size: 14px; color: #9EAEC6; }
+    a { color: #C8D6F0; }
+    .back { display: inline-block; margin-top: 32px; color: #C8D6F0; text-decoration: none; font-size: 13px; }
+</style>
+</head>
+<body>
+<h1>Privacy Policy</h1>
+<p><strong>Effective date:</strong> February 2026</p>
+
+<h2>What data we access</h2>
+<p>When you connect your Strava account, Maestro requests read-only access to your activity data (distance, duration, heart rate) from the last 45 days. We access your athlete profile name solely for display purposes.</p>
+
+<h2>How data is used</h2>
+<p>Your activity data is used exclusively to compute training load metrics (CTL, ATL, TSB, ACWR) and generate AI-powered workout prescriptions. Data is processed in-memory and cached for up to 1 hour to reduce API calls.</p>
+
+<h2>What we store</h2>
+<p>We store an encrypted OAuth token locally to maintain your Strava connection. We do not store your activity data, personal information, or any training history permanently. No data is written to any external database.</p>
+
+<h2>Data sharing</h2>
+<p>We do not sell, share, or transfer your data to any third party. Your activity data is sent to Google Gemini's API solely for the purpose of generating personalised workout prescriptions. No personally identifiable information is included in these requests.</p>
+
+<h2>Disconnecting</h2>
+<p>You can disconnect your Strava account at any time using the "Disconnect" button in the dashboard. This immediately deletes your stored OAuth token and clears all cached data. You can also revoke access from <a href="https://www.strava.com/settings/apps">Strava's application settings</a>.</p>
+
+<h2>Contact</h2>
+<p>For privacy questions, open an issue on the <a href="https://github.com/manol-dimitrov/strava-data-analyser">project repository</a>.</p>
+
+<a class="back" href="/">&larr; Back to dashboard</a>
+</body>
+</html>
+""".trimIndent()
+            call.respondText(html, io.ktor.http.ContentType.Text.Html)
+        }
+
+        get("/terms") {
+            val html = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Terms of Service — Maestro</title>
+<style>
+    body { font-family: 'Inter', -apple-system, sans-serif; background: #030408; color: #F0F4FA; max-width: 680px; margin: 0 auto; padding: 40px 20px; line-height: 1.75; }
+    h1 { font-size: 28px; margin-bottom: 8px; }
+    h2 { font-size: 18px; margin-top: 28px; margin-bottom: 8px; color: #C8D6F0; }
+    p { font-size: 14px; color: #9EAEC6; }
+    a { color: #C8D6F0; }
+    .back { display: inline-block; margin-top: 32px; color: #C8D6F0; text-decoration: none; font-size: 13px; }
+</style>
+</head>
+<body>
+<h1>Terms of Service</h1>
+<p><strong>Effective date:</strong> February 2026</p>
+
+<h2>Service description</h2>
+<p>Maestro is a non-commercial, open-source AI endurance coaching tool. It analyses training data from Strava and generates workout prescriptions using the Banister impulse-response model and AI language models.</p>
+
+<h2>Not medical advice</h2>
+<p>Maestro provides training suggestions based on mathematical models and AI inference. It is not a substitute for professional medical advice, diagnosis, or treatment. Always consult a qualified healthcare provider before making changes to your training programme.</p>
+
+<h2>Data and Strava</h2>
+<p>Maestro accesses your Strava data in accordance with the <a href="https://www.strava.com/legal/api">Strava API Agreement</a>. You can revoke access at any time. See our <a href="/privacy">Privacy Policy</a> for details on data handling.</p>
+
+<h2>Availability</h2>
+<p>Maestro is provided "as is" without warranty. We do not guarantee uptime, accuracy of training prescriptions, or availability of any specific feature.</p>
+
+<h2>Intellectual property</h2>
+<p>Strava and the Strava logo are trademarks of Strava, Inc. Maestro is not affiliated with or endorsed by Strava.</p>
+
+<a class="back" href="/">&larr; Back to dashboard</a>
+</body>
+</html>
+""".trimIndent()
+            call.respondText(html, io.ktor.http.ContentType.Text.Html)
         }
 
         get("/api/strava/status") {

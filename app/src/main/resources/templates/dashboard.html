@@ -3,24 +3,24 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Enduro Coach</title>
+    <title>Maestro — AI Endurance Coach</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
     <style>
         :root {
-            --bg: #070B14;
-            --bg-soft: #0D1220;
-            --surface: #121A2B;
-            --surface-2: #182238;
-            --surface-3: #1C2942;
-            --border: #27344D;
-            --border-strong: #324362;
-            --text: #F4F8FF;
-            --text-secondary: #A8B6CF;
-            --text-muted: #8191AD;
-            --accent: #6D79FF;
-            --accent-2: #15B6FF;
+            --bg: #030408;
+            --bg-soft: #0A0E18;
+            --surface: #0E1219;
+            --surface-2: #141A24;
+            --surface-3: #1A2230;
+            --border: #232D3F;
+            --border-strong: #2E3B52;
+            --text: #F0F4FA;
+            --text-secondary: #9EAEC6;
+            --text-muted: #6B7D99;
+            --accent: #C8D6F0;
+            --accent-2: #8BA0C4;
             --accent-warm: #FC4C02;
             --fresh: #22C38E;
             --fresh-bg: rgba(34, 195, 142, .14);
@@ -45,9 +45,9 @@
             color: var(--text);
             line-height: 1.5;
             background:
-                radial-gradient(1000px 600px at 10% -10%, rgba(109, 121, 255, .22), transparent 65%),
-                radial-gradient(900px 560px at 110% -5%, rgba(21, 182, 255, .16), transparent 62%),
-                linear-gradient(180deg, #09101D 0%, var(--bg) 55%, #050910 100%);
+                radial-gradient(1000px 600px at 10% -10%, rgba(200, 214, 240, .06), transparent 65%),
+                radial-gradient(900px 560px at 110% -5%, rgba(139, 160, 196, .04), transparent 62%),
+                linear-gradient(180deg, #060A12 0%, var(--bg) 55%, #020306 100%);
         }
 
         .topbar {
@@ -72,15 +72,15 @@
             width: 34px;
             height: 34px;
             border-radius: 10px;
-            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+            background: linear-gradient(135deg, #C8D6F0 0%, #8BA0C4 100%);
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #fff;
+            color: #0A0E18;
             font-size: 13px;
             font-weight: 900;
             letter-spacing: -.3px;
-            box-shadow: 0 8px 20px rgba(109, 121, 255, .45);
+            box-shadow: 0 8px 20px rgba(200, 214, 240, .25);
         }
         .brand-name { font-size: 15px; font-weight: 700; letter-spacing: .2px; }
         .topbar-right { display: flex; align-items: center; gap: 12px; }
@@ -103,18 +103,17 @@
             align-items: center;
             white-space: nowrap;
             text-decoration: none;
-            font-size: 12px;
-            font-weight: 700;
-            color: #fff;
-            padding: 9px 14px;
-            border-radius: 10px;
-            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
-            box-shadow: 0 10px 24px rgba(33, 113, 255, .34);
-            transition: transform .15s ease, box-shadow .15s ease;
+            font-size: 0;
+            padding: 0;
+            border-radius: 0;
+            background: none;
+            box-shadow: none;
+            transition: transform .15s ease, opacity .15s ease;
         }
+        .btn-connect img { height: 36px; display: block; }
         .btn-connect:hover {
             transform: translateY(-1px);
-            box-shadow: 0 14px 28px rgba(33, 113, 255, .44);
+            opacity: .85;
         }
         .btn-disconnect {
             text-decoration: none;
@@ -136,9 +135,9 @@
             padding: 58px 28px;
             text-align: center;
             border-radius: 22px;
-            border: 1px solid rgba(131, 155, 199, .18);
+            border: 1px solid rgba(200, 214, 240, .12);
             background:
-                linear-gradient(165deg, rgba(109, 121, 255, .13), rgba(21, 182, 255, .06) 55%, rgba(14, 22, 38, .75) 95%),
+                linear-gradient(165deg, rgba(200, 214, 240, .06), rgba(139, 160, 196, .03) 55%, rgba(10, 14, 24, .85) 95%),
                 var(--surface);
             box-shadow: var(--shadow-md);
         }
@@ -152,9 +151,9 @@
             justify-content: center;
             font-size: 24px;
             font-weight: 900;
-            color: #fff;
-            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
-            box-shadow: 0 14px 34px rgba(81, 113, 255, .45);
+            color: #0A0E18;
+            background: linear-gradient(135deg, #C8D6F0 0%, #8BA0C4 100%);
+            box-shadow: 0 14px 34px rgba(200, 214, 240, .2);
         }
         .welcome-title { font-size: 40px; font-weight: 900; letter-spacing: -.03em; margin-bottom: 12px; }
         .welcome-sub { font-size: 15px; color: var(--text-secondary); line-height: 1.75; margin-bottom: 28px; }
@@ -166,13 +165,41 @@
             color: #fff;
             font-size: 15px;
             font-weight: 700;
-            padding: 13px 26px;
-            border-radius: 12px;
-            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
-            transition: transform .16s ease, box-shadow .16s ease;
-            box-shadow: 0 14px 30px rgba(71, 109, 255, .42);
+            padding: 0;
+            border-radius: 0;
+            background: none;
+            transition: transform .16s ease, opacity .16s ease;
+            box-shadow: none;
         }
-        .welcome-cta:hover { transform: translateY(-2px); box-shadow: 0 18px 34px rgba(71, 109, 255, .52); }
+        .welcome-cta:hover { transform: translateY(-2px); opacity: .85; }
+        .welcome-cta img { height: 48px; display: block; }
+        .strava-powered {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+        .strava-powered img { height: 24px; opacity: .7; }
+        .site-footer {
+            max-width: 1240px;
+            margin: 0 auto;
+            padding: 28px 20px 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+            font-size: 11px;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border);
+        }
+        .site-footer a { color: var(--text-secondary); text-decoration: none; }
+        .site-footer a:hover { color: var(--text); }
+        .site-footer img { height: 28px; opacity: .7; }
         .welcome-note {
             font-size: 13px;
             color: var(--text-secondary);
@@ -230,7 +257,7 @@
             left: 0;
             right: 0;
             height: 2px;
-            background: linear-gradient(90deg, var(--accent) 0%, var(--accent-2) 100%);
+            background: linear-gradient(90deg, #C8D6F0 0%, #8BA0C4 100%);
         }
         .hero-value-block { flex-shrink: 0; }
         .hero-label {
@@ -460,8 +487,8 @@
             width: 18px;
             height: 18px;
             border-radius: 999px;
-            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
-            box-shadow: 0 8px 16px rgba(57, 113, 255, .45);
+            background: linear-gradient(135deg, #C8D6F0 0%, #8BA0C4 100%);
+            box-shadow: 0 8px 16px rgba(200, 214, 240, .25);
             cursor: pointer;
             transition: transform .15s ease;
         }
@@ -498,11 +525,11 @@
             transition: transform .15s ease, box-shadow .15s ease;
         }
         .btn-primary {
-            color: #fff;
-            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
-            box-shadow: 0 10px 24px rgba(57, 113, 255, .38);
+            color: #0A0E18;
+            background: linear-gradient(135deg, #C8D6F0 0%, #8BA0C4 100%);
+            box-shadow: 0 10px 24px rgba(200, 214, 240, .18);
         }
-        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 14px 28px rgba(57, 113, 255, .46); }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 14px 28px rgba(200, 214, 240, .28); }
         .btn-ghost {
             background: rgba(124, 140, 173, .12);
             color: var(--text-secondary);
@@ -597,8 +624,8 @@
 <!-- Topbar -->
 <header class="topbar">
     <div class="topbar-brand">
-        <div class="brand-icon">EC</div>
-        <span class="brand-name">Enduro Coach OS</span>
+        <div class="brand-icon">M</div>
+        <span class="brand-name">Maestro</span>
     </div>
     <div class="topbar-right">
         {{stravaBar}}
@@ -804,5 +831,13 @@
 <!-- DASHBOARD_END -->
 
 </div><!-- /page -->
+
+<footer class="site-footer">
+    <img src="https://developers.strava.com/images/logos/strava_powered_by_light.svg" alt="Powered by Strava" />
+    <a href="/privacy">Privacy</a>
+    <a href="/terms">Terms</a>
+    <span>&copy; 2026 Maestro</span>
+</footer>
+
 </body>
 </html>
