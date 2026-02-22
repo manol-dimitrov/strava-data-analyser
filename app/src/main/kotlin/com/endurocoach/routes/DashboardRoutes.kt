@@ -353,17 +353,17 @@ private fun renderWelcome(
     }
 
     val welcomeHtml = """
-<div class="welcome-hero">
+<div class="welcome-hero anim-in">
     <div class="welcome-icon">M</div>
     <h1 class="welcome-title">Maestro</h1>
     <p class="welcome-sub">Your AI Endurance Coach &mdash; science-backed training load analysis and intelligent daily workout prescriptions built on the Banister impulse-response model.</p>
     $connectButton
     <div class="strava-powered"><img src="/assets/strava/api_logo_pwrdBy_strava_horiz_white.svg" alt="Powered by Strava" /></div>
     <div class="welcome-features">
-        <div class="wf"><span class="wf-icon">&#x1F4CA;</span><span>Fitness, fatigue &amp; readiness tracking</span></div>
-        <div class="wf"><span class="wf-icon">&#x26A1;</span><span>10-day spike &amp; strain alerts</span></div>
-        <div class="wf"><span class="wf-icon">&#x1F9E0;</span><span>AI-generated daily prescriptions</span></div>
-        <div class="wf"><span class="wf-icon">&#x1F6B4;</span><span>All cardio activities supported</span></div>
+        <div class="wf"><span class="wf-icon" aria-hidden="true">&#x1F4CA;</span><span>Fitness, fatigue &amp; readiness tracking</span></div>
+        <div class="wf"><span class="wf-icon" aria-hidden="true">&#x26A1;</span><span>10-day spike &amp; strain alerts</span></div>
+        <div class="wf"><span class="wf-icon" aria-hidden="true">&#x1F9E0;</span><span>AI-generated daily prescriptions</span></div>
+        <div class="wf"><span class="wf-icon" aria-hidden="true">&#x1F6B4;</span><span>All cardio activities supported</span></div>
     </div>
 </div>
 """.trimIndent()
@@ -805,7 +805,7 @@ private fun renderLoadChart(snapshot: LoadSnapshot): String {
     val yLabels = (0..ySteps).map { i ->
         val v = minVal + (safeRange * i / ySteps)
         val y = yPos(v)
-        """<text x="${fmt2(padL - 6)}" y="${fmt2(y + 3.5)}" text-anchor="end" fill="#8b909a" font-size="10">${"%.0f".format(v)}</text>"""
+        """<text x="${fmt2(padL - 6)}" y="${fmt2(y + 3.5)}" text-anchor="end" fill="#7E91B4" font-size="10">${"%.0f".format(v)}</text>"""
     }.joinToString("\n    ")
 
     // X-axis date labels (show ~6 labels)
@@ -814,17 +814,17 @@ private fun renderLoadChart(snapshot: LoadSnapshot): String {
         val idx = if (labelCount <= 1) 0 else i * (series.size - 1) / (labelCount - 1)
         val x = xPos(idx)
         val dateStr = series[idx].date.let { "${it.monthValue}/${it.dayOfMonth}" }
-        """<text x="${fmt2(x)}" y="${fmt2(h - 4)}" text-anchor="middle" fill="#8b909a" font-size="10">$dateStr</text>"""
+        """<text x="${fmt2(x)}" y="${fmt2(h - 4)}" text-anchor="middle" fill="#7E91B4" font-size="10">$dateStr</text>"""
     }.joinToString("\n    ")
 
     val ctlLine = polyline(series.map { it.ctl }, "#1a73e8", 2.2)
     val atlLine = polyline(series.map { it.atl }, "#fc4c02", 2.2)
-    val tsbLine = polyline(series.map { it.tsb }, "#0d9f5f", 1.5, dashed = true)
+    val tsbLine = polyline(series.map { it.tsb }, "#2ED3A2", 1.5, dashed = true)
 
     return """
-<svg viewBox="0 0 ${w.toInt()} ${h.toInt()}" xmlns="http://www.w3.org/2000/svg" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+<svg viewBox="0 0 ${w.toInt()} ${h.toInt()}" xmlns="http://www.w3.org/2000/svg" style="font-family:'IBM Plex Sans',sans-serif;">
     <!-- Grid line at zero -->
-    <line x1="${fmt2(padL)}" y1="$zeroY" x2="${fmt2(w - padR)}" y2="$zeroY" stroke="#e2e5ea" stroke-width="1" stroke-dasharray="4,3"/>
+    <line x1="${fmt2(padL)}" y1="$zeroY" x2="${fmt2(w - padR)}" y2="$zeroY" stroke="rgba(191,210,247,.15)" stroke-width="1" stroke-dasharray="4,3"/>
     <!-- Y labels -->
     $yLabels
     <!-- X labels -->
@@ -836,7 +836,7 @@ private fun renderLoadChart(snapshot: LoadSnapshot): String {
     <!-- End dots -->
     <circle cx="${fmt2(xPos(series.size - 1))}" cy="${fmt2(yPos(series.last().ctl))}" r="3.5" fill="#1a73e8"/>
     <circle cx="${fmt2(xPos(series.size - 1))}" cy="${fmt2(yPos(series.last().atl))}" r="3.5" fill="#fc4c02"/>
-    <circle cx="${fmt2(xPos(series.size - 1))}" cy="${fmt2(yPos(series.last().tsb))}" r="3.5" fill="#0d9f5f"/>
+    <circle cx="${fmt2(xPos(series.size - 1))}" cy="${fmt2(yPos(series.last().tsb))}" r="3.5" fill="#2ED3A2"/>
 </svg>
 """.trimIndent()
 }
@@ -845,7 +845,7 @@ private fun fmt2(v: Double): String = "%.1f".format(v)
 
 private fun renderWorkoutsStrip(activities: List<com.endurocoach.domain.Activity>): String {
     if (activities.isEmpty()) {
-        return """<div class="workouts-card">
+        return """<div class="workouts-card anim-in anim-d3">
     <div class="section-header"><span class="section-title">Recent Workouts</span></div>
     <div class="workouts-empty">No activities in the analysis window.</div>
 </div>"""
@@ -916,14 +916,14 @@ private fun renderWorkoutsStrip(activities: List<com.endurocoach.domain.Activity
         // TRIMP bar color
         val trimpPct = (trimp / maxTrimp * 100).coerceIn(0.0, 100.0)
         val trimpColor = when {
-            trimp > 200 -> "var(--fatigued)"
-            trimp > 100 -> "var(--neutral-clr)"
-            else -> "var(--fresh)"
+            trimp > 200 -> "var(--red)"
+            trimp > 100 -> "var(--amber)"
+            else -> "var(--green)"
         }
 
         """<div class="workout-item">
     <div class="wi-header">
-        <span class="wi-type-icon">$typeIcon</span>
+        <span class="wi-type-icon" aria-hidden="true">$typeIcon</span>
         <div>
             <div class="wi-name">$name</div>
             <div class="wi-date">$dateStr</div>
@@ -942,7 +942,7 @@ private fun renderWorkoutsStrip(activities: List<com.endurocoach.domain.Activity
 </div>"""
     }.joinToString("\n")
 
-    return """<div class="workouts-card">
+    return """<div class="workouts-card anim-in anim-d3">
     <div class="section-header">
         <span class="section-title">Recent Workouts</span>
         <span class="section-sub">${sorted.size} activities</span>
