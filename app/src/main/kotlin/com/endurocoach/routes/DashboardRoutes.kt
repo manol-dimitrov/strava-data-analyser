@@ -362,7 +362,6 @@ private fun renderWelcome(
     <h1 class="welcome-title">Maestro</h1>
     <p class="welcome-sub">Your AI Endurance Coach &mdash; science-backed training load analysis and intelligent daily workout prescriptions built on the Banister impulse-response model.</p>
     $connectButton
-    <div class="strava-powered"><img src="/assets/strava/api_logo_pwrdBy_strava_horiz_white.svg" alt="Powered by Strava" /></div>
     <div class="welcome-features">
         <div class="wf"><span class="wf-icon" aria-hidden="true">&#x1F4CA;</span><span>Fitness, fatigue &amp; readiness tracking</span></div>
         <div class="wf"><span class="wf-icon" aria-hidden="true">&#x26A1;</span><span>10-day spike &amp; strain alerts</span></div>
