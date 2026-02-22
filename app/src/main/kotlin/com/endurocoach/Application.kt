@@ -29,6 +29,7 @@ import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondRedirect
 import io.ktor.server.response.respondText
+import io.ktor.server.http.content.staticResources
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
 import io.ktor.serialization.kotlinx.json.json
@@ -80,6 +81,8 @@ fun Application.module() {
     )
 
     routing {
+        staticResources("/assets", "assets")
+
         installDashboardRoutes(
             DashboardDependencies(
                 templateHtml = dashboardTemplate,

@@ -213,7 +213,7 @@ private fun renderWelcome(
 ): String {
     val connectButton = if (stravaAuthUrl != null) {
         """<a class="welcome-cta" href="${escapeHtml(stravaAuthUrl)}">
-    <img src="https://developers.strava.com/images/btn_strava_connectwith_orange.svg" alt="Connect with Strava" />
+    <img src="/assets/strava/btn_strava_connect_with_orange.svg" alt="Connect with Strava" />
 </a>"""
     } else {
         """<p class="welcome-note">Strava integration is not configured. Set <code>STRAVA_CLIENT_ID</code> and <code>STRAVA_CLIENT_SECRET</code> environment variables to enable.</p>"""
@@ -225,7 +225,7 @@ private fun renderWelcome(
     <h1 class="welcome-title">Maestro</h1>
     <p class="welcome-sub">Your AI Endurance Coach &mdash; science-backed training load analysis and intelligent daily workout prescriptions built on the Banister impulse-response model.</p>
     $connectButton
-    <div class="strava-powered"><img src="https://developers.strava.com/images/logos/strava_powered_by_light.svg" alt="Powered by Strava" /></div>
+    <div class="strava-powered"><img src="/assets/strava/api_logo_pwrdBy_strava_horiz_white.svg" alt="Powered by Strava" /></div>
     <div class="welcome-features">
         <div class="wf"><span class="wf-icon">&#x1F4CA;</span><span>Fitness, fatigue &amp; readiness tracking</span></div>
         <div class="wf"><span class="wf-icon">&#x26A1;</span><span>10-day spike &amp; strain alerts</span></div>
@@ -381,7 +381,7 @@ private fun renderDashboard(
         val statusText = if (source == "strava") "Cardio activities synced" else "Connected — no recent activities"
         """<span class="strava-status"><span class="dot connected"></span>$statusText</span><a class="btn-disconnect" href="/api/strava/disconnect">Disconnect</a>"""
     } else if (stravaAuthUrl != null) {
-        """<span class="strava-status"><span class="dot disconnected"></span>Not connected</span><a class="btn-connect" href="${escapeHtml(stravaAuthUrl)}"><img src="https://developers.strava.com/images/btn_strava_connectwith_orange.svg" alt="Connect with Strava" /></a>"""
+        """<span class="strava-status"><span class="dot disconnected"></span>Not connected</span><a class="btn-connect" href="${escapeHtml(stravaAuthUrl)}"><img src="/assets/strava/btn_strava_connect_with_orange.svg" alt="Connect with Strava" /></a>"""
     } else {
         """<span class="strava-status"><span class="dot disconnected"></span>Demo mode</span>"""
     }
