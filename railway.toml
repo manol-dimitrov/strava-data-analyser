@@ -1,0 +1,10 @@
+[build]
+builder = "nixpacks"
+buildCommand = "./gradlew :app:installDist"
+
+[deploy]
+startCommand = "./app/build/install/app/bin/app"
+healthcheckPath = "/"
+healthcheckTimeout = 300
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3

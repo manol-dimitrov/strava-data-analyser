@@ -1,4 +1,53 @@
-## Plan: Enduro Coach Kotlin MVP
+## Plan: Maestro — AI Endurance Coach (Kotlin MVP)
+
+> **Brand**: Maestro  
+> **Tagline**: "Your AI Endurance Coach"  
+> **Voice**: Elite strategist — authoritative, high-performance guidance  
+> **Visual direction**: Premium dark  
+> **Package root (pending)**: `com.maestrocoach`  
+> **Project slug (pending)**: `maestro`  
+
+### Rebrand Status: LOCKED — pending implementation
+
+The rebrand from "Enduro Coach" to **Maestro** is approved and will be implemented in a future phase. The scope is a full technical rename including UI copy, runtime identifiers, Kotlin package namespace, Gradle project/group naming, and env/config keys. A compatibility window will be maintained for one release (old + new cookie/session/token-dir names accepted in parallel during transition).
+
+#### Rebrand Implementation Phases (future)
+
+**Phase 1 — Low risk: UI copy + visual refresh**
+- Update dashboard title, topbar identity, hero messaging, and feature microcopy to Maestro branding
+- Redesign CSS tokens for premium-dark palette with elite strategist tone
+- Reframe feature language to AI actions: predict, adapt, recommend, brief
+- Update README, docs, and devcontainer display name
+
+**Phase 2 — Medium risk: runtime identifiers**
+- Rename cookie: `enduro_session` → `maestro_session` (dual-read for one release)
+- Rename token store directory: `~/.enduro-coach/` → `~/.maestro/` (dual-read for one release)
+- Rename OAuth state default: `enduro-coach` → `maestro`
+- Rename config namespace: `enduroCoach.*` → `maestro.*` (no aliases — hard rename)
+- Rename env vars: `ENDURO_TOKEN_KEY` → `MAESTRO_TOKEN_KEY` (no aliases)
+- Update health/banner text
+
+**Phase 3 — High risk: namespace + build rename (isolated, compile-gated)**
+Module-by-module migration with compile check after each:
+1. `core-domain`: move `com.endurocoach.domain` → `com.maestrocoach.domain`, compile gate
+2. `core-metrics`: move + update imports, compile gate
+3. `core-llm`: move + update imports, compile gate
+4. `infra-data`: move + update imports, compile gate + run data tests
+5. `infra-strava`: move + update imports, compile gate
+6. `infra-llm`: move + update imports, compile gate
+7. `app`: move + update all imports + mainClass FQCN + application.conf module ref, full build + test gate
+8. Gradle: rename `rootProject.name`, `group`, verify `installDist` and distribution scripts
+
+**Phase 4 — Verification**
+- `./gradlew clean test` passes all modules
+- Manual smoke test: dashboard loads, demo data renders, Strava OAuth flow completes, workout generates
+- Confirm old session/token artifacts are still readable during compatibility window
+- Confirm new writes use Maestro identifiers
+- Confirm renamed env/config keys are required (no old-key fallback)
+
+---
+
+### Original MVP Plan
 
 Build a Kotlin-first web app that delivers the core coaching workflow: Strava ingestion, Banister load modeling (TRIMP/CTL/ATL/TSB), daily subjective check-in, and strict structured workout generation. The architecture uses Ktor for the server, a provider-agnostic LLM boundary (`LlmStructuredClient`), and Google Gemini as the primary adapter (free tier, up to 15 RPM). The design prioritizes fast MVP delivery, deterministic schema validation, and safe rerun behavior (cache Strava pulls, persist generated workout so UI edits do not trigger new LLM calls).
 
@@ -43,4 +92,6 @@ Build a Kotlin-first web app that delivers the core coaching workflow: Strava in
 - **Structured output**: Gemini `responseMimeType: "application/json"` plus `StructuredWorkoutValidation` double-check; auto-retry once.
 - **Strava scope**: OAuth + last-45-day fetch in MVP.
 - **Training model**: Banister HR-based TRIMP with CTL/ATL EMA and TSB.
-- **Naming**: Enduro Coach (human), enduro-coach (slugs), `com.endurocoach` (packages).
+- **Naming (current)**: Enduro Coach (human), enduro-coach (slugs), `com.endurocoach` (packages).
+- **Naming (approved, pending)**: Maestro (human), maestro (slugs), `com.maestrocoach` (packages). Tagline: "Your AI Endurance Coach".
+- **Deployment**: Railway via `railway.toml`; port reads `$PORT` env var; Strava redirect URI set per deployment target.
