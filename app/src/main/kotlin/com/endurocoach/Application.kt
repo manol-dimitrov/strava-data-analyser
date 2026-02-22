@@ -91,12 +91,12 @@ fun Application.module() {
                 sessionRegistry = sessionRegistry,
                 stravaConfigured = stravaConfig != null,
                 tokenStore = tokenStore,
-                loadProvider = { repo ->
+                loadProvider = { repo, maxHr, restingHr ->
                     buildLoadSnapshot(
                         repository = repo,
                         days = 45,
-                        maxHr = 190,
-                        restingHr = 50
+                        maxHr = maxHr,
+                        restingHr = restingHr
                     )
                 }
             )

@@ -495,6 +495,8 @@
         .slider-row input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.1); }
         .slider-val { min-width: 42px; text-align: right; font-size: 13px; font-weight: 700; }
         .form-group input[type="number"],
+        .form-group input[type="text"],
+        .form-group input[type="date"],
         .form-group select {
             width: 100%;
             padding: 11px 13px;
@@ -505,7 +507,21 @@
             font-size: 14px;
             font-family: 'Inter', sans-serif;
         }
+        .hr-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .hr-field label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
         .form-group input[type="number"]:focus,
+        .form-group input[type="text"]:focus,
+        .form-group input[type="date"]:focus,
         .form-group select:focus {
             outline: none;
             border-color: rgba(109, 121, 255, .75);
@@ -564,6 +580,75 @@
         .reasoning-block .ws-label { color: #C8D6FF; }
         .reasoning-block p { color: #DAE4FA; font-size: 13px; line-height: 1.72; }
         .generated-at { margin-top: 12px; font-size: 11px; color: var(--text-muted); }
+        .history-title {
+            margin-top: 18px;
+            margin-bottom: 10px;
+            padding-top: 14px;
+            border-top: 1px solid rgba(131, 155, 199, .2);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .9px;
+            color: var(--text-muted);
+            font-weight: 700;
+        }
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 290px;
+            overflow: auto;
+            padding-right: 3px;
+        }
+        .history-item {
+            border: 1px solid rgba(131, 155, 199, .22);
+            background: rgba(14, 22, 38, .72);
+            border-radius: 10px;
+            padding: 10px 11px;
+        }
+        .history-head { margin-bottom: 7px; }
+        .history-time { font-size: 11px; color: #DCE7FF; font-weight: 600; display: block; margin-bottom: 3px; }
+        .history-meta { font-size: 11px; color: var(--text-secondary); display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .history-body p { font-size: 12px; color: #DCE7FF; line-height: 1.55; margin-bottom: 4px; }
+        .history-body p:last-child { margin-bottom: 0; }
+        .history-empty {
+            border: 1px dashed rgba(131, 155, 199, .26);
+            border-radius: 10px;
+            padding: 14px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+        .layout.single-column { grid-template-columns: 1fr; max-width: 760px; margin: 0 auto; }
+        .onboarding-card { padding: 24px 24px 20px; }
+        .onb-subtitle { color: var(--text-secondary); font-size: 13px; margin-bottom: 10px; }
+        .onb-progress {
+            display: inline-flex;
+            align-items: center;
+            padding: 5px 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(131, 155, 199, .26);
+            background: rgba(124, 140, 173, .12);
+            color: var(--text-secondary);
+            font-size: 11px;
+            font-weight: 600;
+            margin-bottom: 14px;
+        }
+        .onb-choice-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 6px; }
+        .onb-choice {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid rgba(131, 155, 199, .26);
+            border-radius: 10px;
+            padding: 10px 12px;
+            color: var(--text-secondary);
+            background: rgba(18, 26, 43, .58);
+            font-size: 13px;
+            cursor: pointer;
+        }
+        .onb-choice input { accent-color: #8BA0C4; }
+        .onb-nav { margin-top: 18px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+        .onb-nav .btn { width: auto; min-width: 140px; }
 
         .method-disclosure { margin-top: 28px; }
         .method-disclosure summary {
@@ -616,6 +701,8 @@
             .hero-number { font-size: 50px; min-width: 0; }
             .workout-item { flex-basis: 210px; }
             .method-cols { grid-template-columns: 1fr; }
+            .hr-grid { grid-template-columns: 1fr; }
+            .onb-choice-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -756,6 +843,20 @@
         <div class="card-title"><span class="title-icon">&#x1F3CB;</span> Daily Input</div>
         <form action="/dashboard/checkin" method="post">
             <div class="form-group">
+                <label>Heart rate profile</label>
+                <div class="hr-grid">
+                    <div class="hr-field">
+                        <label for="maxHr">Max HR</label>
+                        <input id="maxHr" type="number" name="maxHr" min="120" max="230" value="{{maxHr}}" />
+                    </div>
+                    <div class="hr-field">
+                        <label for="restingHr">Resting HR</label>
+                        <input id="restingHr" type="number" name="restingHr" min="30" max="90" value="{{restingHr}}" />
+                    </div>
+                </div>
+                <div class="hint">One-time setup used for HRR-based TRIMP and load metrics. Update any time.</div>
+            </div>
+            <div class="form-group">
                 <label>How do your legs feel?</label>
                 <div class="slider-row">
                     <input type="range" name="legFeeling" min="1" max="10" value="{{legFeeling}}"
@@ -794,6 +895,8 @@
         <div class="card-title"><span class="title-icon">&#x26A1;</span> Coach Output</div>
         {{errorCard}}
         {{workoutCard}}
+        <div class="history-title">Workout history</div>
+        {{workoutHistory}}
     </div>
 
 </div>

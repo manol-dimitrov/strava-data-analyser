@@ -19,6 +19,7 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import java.time.Instant
+import java.time.LocalDate
 
 data class DashboardState(
     val checkIn: DailyCheckIn = DailyCheckIn(
@@ -27,10 +28,29 @@ data class DashboardState(
         timeAvailableMinutes = 60,
         coachingPhilosophy = "balanced"
     ),
+    val maxHr: Int = 190,
+    val restingHr: Int = 50,
+    val onboarding: OnboardingState = OnboardingState(),
     val latestWorkout: WorkoutPlan? = null,
+    val workoutHistory: List<WorkoutHistoryEntry> = emptyList(),
     val latestError: String? = null,
     val source: String = "demo",
     val generatedAt: Instant? = null
+)
+
+data class OnboardingState(
+    val step: Int = 1,
+    val sportFocus: String = "running",
+    val targetEventName: String = "",
+    val targetEventDate: String = "",
+    val completed: Boolean = false
+)
+
+data class WorkoutHistoryEntry(
+    val generatedAt: Instant,
+    val source: String,
+    val checkIn: DailyCheckIn,
+    val workout: WorkoutPlan
 )
 
 class DashboardStateStore {
@@ -45,10 +65,27 @@ class DashboardStateStore {
     }
 
     @Synchronized
+    fun updateHeartRateProfile(maxHr: Int, restingHr: Int) {
+        state = state.copy(maxHr = maxHr, restingHr = restingHr)
+    }
+
+    @Synchronized
+    fun updateOnboarding(onboarding: OnboardingState) {
+        state = state.copy(onboarding = onboarding)
+    }
+
+    @Synchronized
     fun updateWorkout(snapshotSource: String, workout: WorkoutPlan) {
+        val entry = WorkoutHistoryEntry(
+            generatedAt = Instant.now(),
+            source = snapshotSource,
+            checkIn = state.checkIn,
+            workout = workout
+        )
         state = state.copy(
             source = snapshotSource,
             latestWorkout = workout,
+            workoutHistory = (listOf(entry) + state.workoutHistory).take(20),
             latestError = null,
             generatedAt = Instant.now()
         )
@@ -71,7 +108,7 @@ data class DashboardDependencies(
     val sessionRegistry: SessionRegistry,
     val stravaConfigured: Boolean = false,
     val tokenStore: TokenStore,
-    val loadProvider: suspend (CachedActivityRepository?) -> Triple<String, LoadSnapshot, List<com.endurocoach.domain.Activity>>
+    val loadProvider: suspend (CachedActivityRepository?, Int, Int) -> Triple<String, LoadSnapshot, List<com.endurocoach.domain.Activity>>
 )
 
 fun Route.installDashboardRoutes(dependencies: DashboardDependencies) {
@@ -112,7 +149,17 @@ fun Route.installDashboardRoutes(dependencies: DashboardDependencies) {
 
         // ----- Authenticated: load data and render the full dashboard -----
         val state = session.dashboardState.read()
-        val (source, snapshot, activities) = dependencies.loadProvider(session.activityRepository)
+        if (!state.onboarding.completed) {
+            val html = renderOnboarding(template = dependencies.templateHtml, state = state)
+            call.respondText(html, ContentType.Text.Html)
+            return@get
+        }
+
+        val (source, snapshot, activities) = dependencies.loadProvider(
+            session.activityRepository,
+            state.maxHr,
+            state.restingHr
+        )
 
         val html = renderDashboard(
             template = dependencies.templateHtml,
@@ -134,11 +181,55 @@ fun Route.installDashboardRoutes(dependencies: DashboardDependencies) {
         if (sessionId != session.id) {
             call.response.cookies.append(name = SESSION_COOKIE, value = session.id, path = "/", maxAge = SESSION_MAX_AGE)
         }
+        val params = call.receiveParameters()
         val parsed = parseCheckIn(
-            params = call.receiveParameters(),
+            params = params,
             philosophyRulePacks = dependencies.philosophyRulePacks
         )
+        val current = session.dashboardState.read()
+        val maxHr = parseMaxHr(params, current.maxHr)
+        val restingHr = parseRestingHr(params, current.restingHr)
         session.dashboardState.updateCheckIn(parsed)
+        session.dashboardState.updateHeartRateProfile(maxHr, restingHr)
+        call.respondRedirect("/")
+    }
+
+    post("/dashboard/onboarding") {
+        val sessionId = call.request.cookies[SESSION_COOKIE]
+        val session = dependencies.sessionRegistry.getOrCreate(sessionId)
+        if (sessionId != session.id) {
+            call.response.cookies.append(name = SESSION_COOKIE, value = session.id, path = "/", maxAge = SESSION_MAX_AGE)
+        }
+
+        val params = call.receiveParameters()
+        val current = session.dashboardState.read()
+        val action = params["action"] ?: "next"
+
+        val sportFocus = parseSportFocus(params["sportFocus"], current.onboarding.sportFocus)
+        val targetEventName = params["targetEventName"]?.trim()?.take(80) ?: current.onboarding.targetEventName
+        val targetEventDate = parseTargetEventDate(params["targetEventDate"], current.onboarding.targetEventDate)
+
+        val maxHr = parseMaxHr(params, current.maxHr)
+        val restingHr = parseRestingHr(params, current.restingHr)
+        session.dashboardState.updateHeartRateProfile(maxHr, restingHr)
+
+        val nextStep = when (action) {
+            "back" -> (current.onboarding.step - 1).coerceAtLeast(1)
+            "finish" -> 3
+            else -> (current.onboarding.step + 1).coerceAtMost(3)
+        }
+
+        val completed = action == "finish"
+        session.dashboardState.updateOnboarding(
+            current.onboarding.copy(
+                step = nextStep,
+                sportFocus = sportFocus,
+                targetEventName = targetEventName,
+                targetEventDate = targetEventDate,
+                completed = completed
+            )
+        )
+
         call.respondRedirect("/")
     }
 
@@ -148,17 +239,26 @@ fun Route.installDashboardRoutes(dependencies: DashboardDependencies) {
         if (sessionId != session.id) {
             call.response.cookies.append(name = SESSION_COOKIE, value = session.id, path = "/", maxAge = SESSION_MAX_AGE)
         }
+        val params = call.receiveParameters()
         val parsed = parseCheckIn(
-            params = call.receiveParameters(),
+            params = params,
             philosophyRulePacks = dependencies.philosophyRulePacks
         )
+        val current = session.dashboardState.read()
+        val maxHr = parseMaxHr(params, current.maxHr)
+        val restingHr = parseRestingHr(params, current.restingHr)
         session.dashboardState.updateCheckIn(parsed)
+        session.dashboardState.updateHeartRateProfile(maxHr, restingHr)
 
-        val (source, snapshot, _) = dependencies.loadProvider(session.activityRepository)
+        val (source, snapshot, _) = dependencies.loadProvider(session.activityRepository, maxHr, restingHr)
+        val state = session.dashboardState.read()
+        val profileContext = buildOnboardingProfileContext(state.onboarding)
+        val basePhilosophy = dependencies.philosophyRulePacks[parsed.coachingPhilosophy]
+            ?: dependencies.philosophyRulePacks.getValue("balanced")
+
         val request = WorkoutRequest(
             checkIn = parsed.copy(
-                coachingPhilosophy = dependencies.philosophyRulePacks[parsed.coachingPhilosophy]
-                    ?: dependencies.philosophyRulePacks.getValue("balanced")
+                coachingPhilosophy = "$basePhilosophy\n$profileContext"
             ),
             currentTsb = snapshot.tsb,
             currentCtl = snapshot.ctl,
@@ -198,6 +298,39 @@ private fun parseCheckIn(
         timeAvailableMinutes = params["timeAvailableMinutes"]?.toIntOrNull()?.coerceIn(15, 240) ?: 60,
         coachingPhilosophy = selected
     )
+}
+
+private fun parseMaxHr(params: io.ktor.http.Parameters, current: Int): Int {
+    return params["maxHr"]?.toIntOrNull()?.coerceIn(120, 230) ?: current
+}
+
+private fun parseRestingHr(params: io.ktor.http.Parameters, current: Int): Int {
+    return params["restingHr"]?.toIntOrNull()?.coerceIn(30, 90) ?: current
+}
+
+private fun parseSportFocus(input: String?, current: String): String {
+    val allowed = setOf("running", "cycling", "triathlon", "general")
+    return input?.takeIf { it in allowed } ?: current
+}
+
+private fun parseTargetEventDate(input: String?, current: String): String {
+    if (input == null) return current
+    val raw = input.trim()
+    if (raw.isEmpty()) return ""
+    return runCatching { LocalDate.parse(raw) }.map { raw }.getOrElse { current }
+}
+
+private fun buildOnboardingProfileContext(onboarding: OnboardingState): String {
+    val eventName = onboarding.targetEventName.ifBlank { "Not specified" }
+    val eventDate = onboarding.targetEventDate.ifBlank { "Not specified" }
+
+    return """
+Athlete profile context:
+- Sport focus: ${onboarding.sportFocus}
+- Target event: $eventName
+- Target event date: $eventDate
+If a target event date is specified and within 12 weeks, bias the session toward appropriate periodisation (build, sharpen, taper) while respecting readiness and risk metrics.
+""".trimIndent()
 }
 
 /**
@@ -247,6 +380,97 @@ private fun renderWelcome(
         // Remove the authenticated dashboard content between markers
         .replace(Regex("<!-- DASHBOARD_START -->.*<!-- DASHBOARD_END -->", RegexOption.DOT_MATCHES_ALL), "")
         // Zero out any remaining tokens (metric values, badges, etc.)
+        .replace(Regex("\\{\\{[a-zA-Z0-9]+}}"), "")
+}
+
+private fun renderOnboarding(
+    template: String,
+    state: DashboardState
+): String {
+    val step = state.onboarding.step.coerceIn(1, 3)
+    val progressText = "Step $step of 3"
+
+    val sportOptions = listOf("running", "cycling", "triathlon", "general")
+        .joinToString("\n") { option ->
+            val active = if (state.onboarding.sportFocus == option) "checked" else ""
+            """<label class="onb-choice"><input type="radio" name="sportFocus" value="$option" $active /> ${escapeHtml(option.replaceFirstChar(Char::uppercaseChar))}</label>"""
+        }
+
+    val stepBody = when (step) {
+        1 -> """
+<div class="form-group">
+    <label>Primary training focus</label>
+    <div class="onb-choice-grid">$sportOptions</div>
+    <div class="hint">Used to bias session type and progression logic.</div>
+</div>
+""".trimIndent()
+
+        2 -> """
+<div class="form-group">
+    <label>Heart rate profile</label>
+    <div class="hr-grid">
+        <div class="hr-field">
+            <label for="maxHr">Max HR</label>
+            <input id="maxHr" type="number" name="maxHr" min="120" max="230" value="${state.maxHr}" />
+        </div>
+        <div class="hr-field">
+            <label for="restingHr">Resting HR</label>
+            <input id="restingHr" type="number" name="restingHr" min="30" max="90" value="${state.restingHr}" />
+        </div>
+    </div>
+    <div class="hint">These values calibrate HRR/TRIMP load calculations.</div>
+</div>
+""".trimIndent()
+
+        else -> """
+<div class="form-group">
+    <label>Target event name</label>
+    <input type="text" name="targetEventName" maxlength="80" value="${escapeHtml(state.onboarding.targetEventName)}" placeholder="e.g. Sofia Marathon" />
+    <div class="hint">Optional, but improves specificity of coaching suggestions.</div>
+</div>
+<div class="form-group">
+    <label>Target event date</label>
+    <input type="date" name="targetEventDate" value="${escapeHtml(state.onboarding.targetEventDate)}" />
+    <div class="hint">Optional. If provided, workouts will bias toward the right training phase.</div>
+</div>
+""".trimIndent()
+    }
+
+    val backBtn = if (step > 1) {
+        """<button class="btn btn-ghost" type="submit" name="action" value="back">Back</button>"""
+    } else {
+        """<span></span>"""
+    }
+
+    val nextBtn = if (step < 3) {
+        """<button class="btn btn-primary" type="submit" name="action" value="next">Continue</button>"""
+    } else {
+        """<button class="btn btn-primary" type="submit" name="action" value="finish">Finish onboarding</button>"""
+    }
+
+    val onboardingHtml = """
+<div class="layout single-column">
+    <div class="card onboarding-card">
+        <div class="card-title"><span class="title-icon">&#x1F680;</span> Welcome to Maestro</div>
+        <div class="onb-subtitle">Complete a quick setup to personalise your coaching engine.</div>
+        <div class="onb-progress">$progressText</div>
+        <form action="/dashboard/onboarding" method="post">
+            $stepBody
+            <div class="onb-nav">
+                $backBtn
+                $nextBtn
+            </div>
+        </form>
+    </div>
+</div>
+""".trimIndent()
+
+    val stravaBar = """<span class="strava-status"><span class="dot connected"></span>Connected</span><a class="btn-disconnect" href="/api/strava/disconnect">Disconnect</a>"""
+
+    return template
+        .replace("{{stravaBar}}", stravaBar)
+        .replace("{{dashboardContent}}", onboardingHtml)
+        .replace(Regex("<!-- DASHBOARD_START -->.*<!-- DASHBOARD_END -->", RegexOption.DOT_MATCHES_ALL), "")
         .replace(Regex("\\{\\{[a-zA-Z0-9]+}}"), "")
 }
 
@@ -327,7 +551,6 @@ private fun renderDashboard(
     }
 
     // ATL contextual interpretation (relative to CTL — ACWR-informed)
-    val atl = snapshot.atl
     val acwr = snapshot.acwr
     val atlBadgeClass = when {
         acwr > 1.5 -> "fatigued"    // spike zone (Gabbett)
@@ -391,6 +614,7 @@ private fun renderDashboard(
 
     // Recent workouts strip
     val workoutsStrip = renderWorkoutsStrip(activities)
+    val workoutHistory = renderWorkoutHistory(state.workoutHistory)
 
     // ACWR badge
     val acwrBadgeClass = when {
@@ -523,8 +747,11 @@ private fun renderDashboard(
         .replace("{{legFeeling}}", state.checkIn.legFeeling.toString())
         .replace("{{mentalReadiness}}", state.checkIn.mentalReadiness.toString())
         .replace("{{timeAvailableMinutes}}", state.checkIn.timeAvailableMinutes.toString())
+        .replace("{{maxHr}}", state.maxHr.toString())
+        .replace("{{restingHr}}", state.restingHr.toString())
         .replace("{{philosophyOptions}}", options)
         .replace("{{workoutCard}}", workoutCard)
+        .replace("{{workoutHistory}}", workoutHistory)
         .replace("{{errorCard}}", errorCard)
         // dashboardContent is only used by the welcome flow; in the full dashboard it's a no-op
         .replace("{{dashboardContent}}", "")
@@ -724,4 +951,35 @@ private fun renderWorkoutsStrip(activities: List<com.endurocoach.domain.Activity
 $cards
     </div>
 </div>"""
+}
+
+private fun renderWorkoutHistory(history: List<WorkoutHistoryEntry>): String {
+    if (history.isEmpty()) {
+        return """<div class="history-empty">No saved workouts yet. Generate your first session to build history.</div>"""
+    }
+
+    val items = history.joinToString("\n") { item ->
+        val sourceBadge = if (item.source == "strava") {
+            "<span class=\"badge strava-badge\">Strava</span>"
+        } else {
+            "<span class=\"badge demo-badge\">Demo</span>"
+        }
+
+        val philosophy = item.checkIn.coachingPhilosophy.replaceFirstChar(Char::uppercaseChar)
+        val generatedAt = item.generatedAt.toString().replace("T", " ").take(16)
+
+        """<div class="history-item">
+    <div class="history-head">
+        <span class="history-time">$generatedAt</span>
+        <span class="history-meta">Legs ${item.checkIn.legFeeling}/10 · Mind ${item.checkIn.mentalReadiness}/10 · ${item.checkIn.timeAvailableMinutes}m · $philosophy $sourceBadge</span>
+    </div>
+    <div class="history-body">
+        <p><strong>Warm-up:</strong> ${escapeHtml(item.workout.warmup)}</p>
+        <p><strong>Main set:</strong> ${escapeHtml(item.workout.mainSet)}</p>
+        <p><strong>Cool-down:</strong> ${escapeHtml(item.workout.cooldown)}</p>
+    </div>
+</div>"""
+    }
+
+    return """<div class="history-list">$items</div>"""
 }
