@@ -216,14 +216,27 @@ fun Application.module() {
             if (oauth == null) {
                 call.respond(mapOf("error" to "Strava is not configured"))
             } else {
-                call.respond(mapOf("url" to oauth.buildAuthorizationUrl(state = session.id)))
+                val state = sessionRegistry.issueOAuthState(session.id)
+                call.respond(mapOf("url" to oauth.buildAuthorizationUrl(state = state)))
             }
         }
 
         get("/api/strava/exchange") {
             val code = call.request.queryParameters["code"]
             val state = call.request.queryParameters["state"]
-            val session = sessionRegistry.getOrCreate(state)
+            val sessionId = call.request.cookies[SESSION_COOKIE]
+
+            if (sessionId.isNullOrBlank()) {
+                call.respond(mapOf("ok" to false, "error" to "Missing session cookie. Restart OAuth from this browser."))
+                return@get
+            }
+
+            val session = sessionRegistry.get(sessionId)
+                ?: run {
+                    call.respond(mapOf("ok" to false, "error" to "Session expired. Restart OAuth from dashboard."))
+                    return@get
+                }
+
             val oauth = session.oauthService
 
             if (oauth == null) {
@@ -233,6 +246,16 @@ fun Application.module() {
 
             if (code.isNullOrBlank()) {
                 call.respond(mapOf("ok" to false, "error" to "Missing code query parameter"))
+                return@get
+            }
+
+            if (state.isNullOrBlank()) {
+                call.respond(mapOf("ok" to false, "error" to "Missing OAuth state parameter"))
+                return@get
+            }
+
+            if (!sessionRegistry.consumeOAuthState(session.id, state)) {
+                call.respond(mapOf("ok" to false, "error" to "Invalid or expired OAuth state. Restart OAuth from dashboard."))
                 return@get
             }
 
@@ -254,7 +277,8 @@ fun Application.module() {
             if (oauth == null) {
                 call.respond(mapOf("ok" to false, "error" to "Strava is not configured"))
             } else {
-                call.respondRedirect(oauth.buildAuthorizationUrl(state = session.id))
+                val state = sessionRegistry.issueOAuthState(session.id)
+                call.respondRedirect(oauth.buildAuthorizationUrl(state = state))
             }
         }
 

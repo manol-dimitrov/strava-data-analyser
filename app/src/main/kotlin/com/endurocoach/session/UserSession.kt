@@ -7,6 +7,8 @@ import com.endurocoach.strava.StravaActivityRepository
 import com.endurocoach.strava.StravaConfig
 import com.endurocoach.strava.StravaOAuthService
 import io.ktor.client.HttpClient
+import java.time.Duration
+import java.time.Instant
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
@@ -41,7 +43,14 @@ class SessionRegistry(
     private val tokenStore: TokenStore,
     private val httpClient: HttpClient
 ) {
+    private data class PendingOAuthState(
+        val sessionId: String,
+        val expiresAt: Instant
+    )
+
     private val sessions = ConcurrentHashMap<String, UserSession>()
+    private val oauthStates = ConcurrentHashMap<String, PendingOAuthState>()
+    private val oauthStateTtl: Duration = Duration.ofMinutes(10)
 
     /** Return the existing session for [sessionId], or create a brand-new one. */
     fun getOrCreate(sessionId: String?): UserSession {
@@ -54,6 +63,24 @@ class SessionRegistry(
 
     /** Lookup only — returns null when the session does not exist. */
     fun get(sessionId: String): UserSession? = sessions[sessionId]
+
+    /** Create a one-time OAuth state token bound to a specific session. */
+    fun issueOAuthState(sessionId: String): String {
+        purgeExpiredOAuthStates()
+        val state = UUID.randomUUID().toString()
+        oauthStates[state] = PendingOAuthState(
+            sessionId = sessionId,
+            expiresAt = Instant.now().plus(oauthStateTtl)
+        )
+        return state
+    }
+
+    /** Consume and validate a one-time OAuth state token for a session. */
+    fun consumeOAuthState(sessionId: String, state: String): Boolean {
+        purgeExpiredOAuthStates()
+        val pending = oauthStates.remove(state) ?: return false
+        return pending.sessionId == sessionId && pending.expiresAt.isAfter(Instant.now())
+    }
 
     private fun buildSession(id: String): UserSession {
         val key = "strava_token_$id"
@@ -76,5 +103,10 @@ class SessionRegistry(
             oauthService = oauth,
             activityRepository = repo
         )
+    }
+
+    private fun purgeExpiredOAuthStates() {
+        val now = Instant.now()
+        oauthStates.entries.removeIf { (_, pending) -> pending.expiresAt.isBefore(now) }
     }
 }

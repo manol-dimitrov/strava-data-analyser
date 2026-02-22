@@ -100,7 +100,7 @@ fun Route.installDashboardRoutes(dependencies: DashboardDependencies) {
 
         // ----- GATE: unauthenticated users see the welcome hero -----
         if (!stravaConnected) {
-            val stravaAuthUrl = session.oauthService?.buildAuthorizationUrl(state = session.id)
+            val stravaAuthUrl = session.oauthService?.let { "/api/strava/connect" }
             val html = renderWelcome(
                 template = dependencies.templateHtml,
                 stravaConfigured = dependencies.stravaConfigured,
