@@ -490,49 +490,43 @@
             flex: 0 0 230px;
             scroll-snap-align: start;
             border-radius: 12px;
-            border: 1px solid rgba(179, 157, 255, .24);
-            background: linear-gradient(160deg, rgba(155, 114, 255, .16), rgba(14, 21, 38, .94));
+            border: 1px solid rgba(179, 157, 255, .16);
+            border-top: 2px solid rgba(179, 157, 255, .45);
+            background: rgba(16, 10, 46, .6);
             padding: 14px;
             display: flex;
             flex-direction: column;
             gap: 8px;
             transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, .04);
         }
         .workout-item:hover {
-            transform: translateY(-4px) scale(1.015);
-            border-color: rgba(179, 157, 255, .52);
-            box-shadow: 0 14px 32px rgba(0, 0, 0, .4), 0 0 0 1px rgba(179, 157, 255, .08);
+            transform: translateY(-3px);
+            border-color: rgba(179, 157, 255, .38);
+            border-top-color: rgba(179, 157, 255, .8);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, .38);
         }
-        .workout-item:nth-child(3n+1) { border-left: 3px solid rgba(155, 114, 255, .85); }
-        .workout-item:nth-child(3n+2) { border-left: 3px solid rgba(252, 76, 2, .85); }
-        .workout-item:nth-child(3n+3) { border-left: 3px solid rgba(46, 211, 162, .85); }
         .wi-header { display: flex; align-items: center; gap: 8px; }
         .wi-type-icon {
-            font-size: 15px;
-            width: 26px;
-            height: 26px;
+            font-size: 16px;
+            width: 28px;
+            height: 28px;
             border-radius: 8px;
             display: grid;
             place-items: center;
-            background: linear-gradient(145deg, rgba(155, 114, 255, .35), rgba(107, 70, 220, .25));
-            border: 1px solid rgba(179, 157, 255, .3);
+            background: rgba(155, 114, 255, .1);
+            border: 1px solid rgba(179, 157, 255, .18);
         }
         .wi-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .wi-date { color: var(--text-muted); font-size: 11px; }
         .wi-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
         .wi-stat {
-            border: 1px solid rgba(179, 157, 255, .14);
+            border: 1px solid rgba(179, 157, 255, .1);
             border-radius: 8px;
-            padding: 5px 6px;
-            background: rgba(14, 8, 40, .55);
+            padding: 5px 7px;
+            background: rgba(9, 6, 26, .4);
         }
         .wi-stat-label { color: var(--text-muted); font-size: 10px; text-transform: uppercase; letter-spacing: .55px; }
-        .wi-stat-value { color: #DDD4FF; font-size: 12px; font-weight: 700; }
-        .wi-stat:nth-child(1) .wi-stat-value { color: #C0ADFF; }
-        .wi-stat:nth-child(2) .wi-stat-value { color: #FFD39B; }
-        .wi-stat:nth-child(3) .wi-stat-value { color: #92F4CD; }
-        .wi-stat:nth-child(4) .wi-stat-value { color: #FFB7C5; }
+        .wi-stat-value { color: var(--text); font-size: 12px; font-weight: 600; }
         .wi-trimp-row { display: flex; align-items: center; gap: 8px; }
         .wi-trimp-bar { flex: 1; height: 5px; border-radius: 999px; overflow: hidden; background: rgba(155, 114, 255, .24); }
         .wi-trimp-fill { height: 100%; border-radius: 999px; }
