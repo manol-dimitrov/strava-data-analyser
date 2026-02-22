@@ -30,36 +30,22 @@ infra-llm/        Gemini adapter (default), Perplexity adapter (opt-in)
 - **Elite coach persona** — direct, no-sycophancy prompts requiring physiological justification for every prescription
 - **Graceful fallback** — demo data when Strava is unconfigured or unavailable
 
-## Environment Variables
+## Configuration
 
-### Google Gemini (default LLM)
-| Variable | Required | Default |
+All runtime config is managed as code — see [config/](config/) for deployment templates:
+
+- **Railway**: `config/railway.env.json` — paste directly into Railway's Raw Editor
+- **Local dev**: `.env.example` — copy to `.env` and source before running
+- **Application config**: `app/src/main/resources/application.conf` — versioned defaults (LLM provider, coaching philosophy)
+
+### Required Environment Variables
+
+| Variable | Required | Where to get it |
 |---|---|---|
-| `GEMINI_API_KEY` | Yes | — |
-| `GEMINI_MODEL` | No | `gemini-2.5-flash` |
-| `GEMINI_BASE_URL` | No | `https://generativelanguage.googleapis.com` |
-
-### Perplexity (opt-in alternative)
-Set `enduroCoach.llm.provider = "perplexity"` in `application.conf`, then:
-| Variable | Required | Default |
-|---|---|---|
-| `PERPLEXITY_API_KEY` | Yes | — |
-| `PERPLEXITY_MODEL` | No | `sonar` |
-| `PERPLEXITY_BASE_URL` | No | `https://api.perplexity.ai` |
-
-### Strava
-| Variable | Required | Default |
-|---|---|---|
-| `STRAVA_CLIENT_ID` | Yes | — |
-| `STRAVA_CLIENT_SECRET` | Yes | — |
-| `STRAVA_REDIRECT_URI` | Yes | — |
-
-For GitHub Codespaces, set redirect URI to `https://<codespace-name>-8080.app.github.dev/api/strava/exchange`.
-
-### Token Encryption
-| Variable | Required | Default |
-|---|---|---|
-| `ENDURO_TOKEN_KEY` | No | Machine-local derived key |
+| `GEMINI_API_KEY` | Yes | [aistudio.google.com/apikey](https://aistudio.google.com/apikey) |
+| `STRAVA_CLIENT_ID` | Yes | [strava.com/settings/api](https://www.strava.com/settings/api) |
+| `STRAVA_CLIENT_SECRET` | Yes | [strava.com/settings/api](https://www.strava.com/settings/api) |
+| `STRAVA_REDIRECT_URI` | Yes | `https://<your-domain>/api/strava/exchange` |
 
 OAuth tokens are stored encrypted (AES-256-GCM) under `~/.enduro-coach/`.
 
@@ -87,19 +73,29 @@ The fastest way to try this — no local setup required:
 ## Run Locally
 
 ```bash
-# Build
-gradle build
+# Copy and fill env template
+cp .env.example .env
+# Edit .env with your API keys
 
-# Start (with env vars)
-GEMINI_API_KEY="..." \
-STRAVA_CLIENT_ID="..." \
-STRAVA_CLIENT_SECRET="..." \
-STRAVA_REDIRECT_URI="http://localhost:8080/api/strava/exchange" \
-gradle :app:run
+# Build and run
+source .env
+./gradlew :app:run
 
 # Open dashboard
 open http://localhost:8080/
 ```
+
+## Deploy to Railway
+
+Railway gives you a permanent public URL with zero-config builds.
+
+1. **Push to GitHub** (already done if you're reading this)
+2. **Create Railway project**: [railway.app](https://railway.app) → New Project → Deploy from GitHub → select this repo
+3. **Set env vars**: Copy [config/railway.env.json](config/railway.env.json), fill in your values, paste into Railway's **Raw Editor** (Variables tab)
+4. **Update Strava redirect**: After first deploy, copy your Railway URL and set `STRAVA_REDIRECT_URI=https://<your-app>.up.railway.app/api/strava/exchange`
+5. **Authorize callback domain**: Add your Railway domain to [Strava API settings](https://www.strava.com/settings/api) authorized callbacks
+
+Railway auto-builds on every push to `master`. First deploy takes ~2 minutes.
 
 ## Strava Connection
 

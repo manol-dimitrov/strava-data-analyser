@@ -15,3 +15,7 @@ Thumbs.db
 # App artifacts
 cookies.txt
 *.log
+
+# Local environment config (secrets)
+.env
+.env.local
