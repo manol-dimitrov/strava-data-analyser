@@ -25,6 +25,8 @@
             --green: #2ED3A2;
             --amber: #FFBD5B;
             --red: #FF6C84;
+            --text-lavender: #D0C0FF;
+            --text-lavender-dim: #CCBBFF;
             --radius-xl: 24px;
             --radius-lg: 16px;
             --radius-md: 12px;
@@ -56,14 +58,17 @@
         }
 
         /* ── Entrance animation classes ── */
-        .anim-in { opacity: 0; animation: fadeSlideIn .55s cubic-bezier(.22, 1, .36, 1) forwards; }
-        .anim-d1 { animation-delay: .08s; }
-        .anim-d2 { animation-delay: .16s; }
-        .anim-d3 { animation-delay: .24s; }
-        .anim-d4 { animation-delay: .32s; }
-        .anim-d5 { animation-delay: .40s; }
-        .anim-d6 { animation-delay: .48s; }
-        .anim-d7 { animation-delay: .56s; }
+        .anim-in { opacity: 1; } /* visible by default; reduced-motion fallback */
+        @media (prefers-reduced-motion: no-preference) {
+            .anim-in { opacity: 0; animation: fadeSlideIn .55s cubic-bezier(.22, 1, .36, 1) forwards; }
+            .anim-d1 { animation-delay: .04s; }
+            .anim-d2 { animation-delay: .08s; }
+            .anim-d3 { animation-delay: .12s; }
+            .anim-d4 { animation-delay: .16s; }
+            .anim-d5 { animation-delay: .20s; }
+            .anim-d6 { animation-delay: .24s; }
+            .anim-d7 { animation-delay: .28s; }
+        }
 
         /* ── Skip link ── */
         .skip-link {
@@ -104,7 +109,7 @@
             inset: -50%;
             width: 200%;
             height: 200%;
-            z-index: 9999;
+            z-index: 10;
             pointer-events: none;
             opacity: .025;
             background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
@@ -222,7 +227,7 @@
             margin: 0 auto 28px;
             line-height: 1.7;
         }
-        .welcome-cta { display: inline-flex; text-decoration: none; }
+        .welcome-cta { display: inline-flex; text-decoration: none; transition: transform .15s ease, opacity .15s ease; }
         .welcome-cta img { height: 48px; }
         .welcome-cta:hover { opacity: .85; transform: translateY(-1px); }
 
@@ -301,7 +306,7 @@
             top: 0;
             width: 100%;
             height: 2px;
-            background: linear-gradient(90deg, #D4BFFF 0%, #9B72FF 60%, rgba(155,114,255,0) 100%);
+            background: linear-gradient(90deg, #D4BFFF 0%, #9B72FF 50%, rgba(155,114,255,.18) 100%);
         }
         .hero-value-block { flex-shrink: 0; }
         .hero-label {
@@ -362,8 +367,9 @@
             text-transform: uppercase;
             letter-spacing: 1.2px;
             font-weight: 700;
-            padding-left: 2px;
-            margin-top: 2px;
+            padding-left: 8px;
+            margin-top: 4px;
+            border-left: 2px solid var(--violet-2);
         }
         .metric-card { padding: 18px; display: flex; flex-direction: column; gap: 7px; transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
         .metric-card:hover { transform: translateY(-2px); box-shadow: 0 14px 28px rgba(0, 0, 0, .38); border-color: rgba(179, 157, 255, .34); }
@@ -409,7 +415,7 @@
         .badge.fresh { color: #8EF3CD; background: rgba(46, 211, 162, .14); border-color: rgba(46, 211, 162, .3); }
         .badge.neutral { color: #FFD9A1; background: rgba(255, 189, 91, .14); border-color: rgba(255, 189, 91, .3); }
         .badge.fatigued { color: #FFC0CC; background: rgba(255, 108, 132, .14); border-color: rgba(255, 108, 132, .3); }
-        .badge.demo-badge { color: #C0B4E2; background: rgba(155, 114, 255, .14); border-color: rgba(155, 114, 255, .3); }
+        .badge.demo-badge { color: var(--text-lavender-dim); background: rgba(155, 114, 255, .14); border-color: rgba(155, 114, 255, .3); }
         .badge.strava-badge { color: #FFBC98; background: rgba(252, 76, 2, .14); border-color: rgba(252, 76, 2, .34); }
 
         .tip-wrap { position: relative; display: inline-flex; }
@@ -419,7 +425,7 @@
             border-radius: 999px;
             display: grid;
             place-items: center;
-            color: #D0C0FF;
+            color: var(--text-lavender);
             font-size: 9px;
             font-weight: 700;
             background: rgba(155, 114, 255, .25);
@@ -461,6 +467,17 @@
         .method-body-wrap {
             padding: 22px 24px;
             margin-bottom: 16px;
+        }
+        .workouts-card { position: relative; }
+        .workouts-card::after {
+            content: '';
+            position: absolute;
+            right: 0; top: 58px; bottom: 14px;
+            width: 72px;
+            background: linear-gradient(to right, transparent, var(--surface) 88%);
+            pointer-events: none;
+            z-index: 2;
+            border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
         }
         .section-header {
             display: flex;
@@ -553,7 +570,7 @@
         .title-icon { font-size: 17px; }
 
         .form-group { margin-bottom: 17px; }
-        .form-group label { display: block; margin-bottom: 8px; color: #D0BBFF; font-size: 13px; font-weight: 600; }
+        .form-group label { display: block; margin-bottom: 8px; color: var(--text-lavender); font-size: 13px; font-weight: 600; }
         .slider-row { display: flex; align-items: center; gap: 10px; }
         .slider-row input[type="range"] {
             flex: 1;
@@ -562,7 +579,7 @@
             height: 6px;
             border-radius: 999px;
             outline: none;
-            background: rgba(155, 114, 255, .34);
+            background: linear-gradient(to right, var(--violet) 0%, var(--violet) var(--val, 50%), rgba(155, 114, 255, .34) var(--val, 50%), rgba(155, 114, 255, .34) 100%);
         }
         .slider-row input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
@@ -649,10 +666,6 @@
             outline: 2px solid rgba(155, 114, 255, .7);
             outline-offset: 2px;
         }
-        button:focus-visible, a:focus-visible, summary:focus-visible {
-            outline: 2px solid rgba(155, 114, 255, .7);
-            outline-offset: 2px;
-        }
 
         .workout-empty { color: var(--text-soft); font-size: 14px; text-align: center; padding: 40px 12px; }
         .workout-empty .empty-icon { font-size: 38px; margin-bottom: 11px; }
@@ -670,7 +683,7 @@
         .ws-header { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
         .ws-icon { font-size: 14px; }
         .ws-label { color: #9B84D4; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
-        .workout-section p { color: #DACEFF; font-size: 14px; line-height: 1.72; }
+        .workout-section p { color: var(--text-lavender); font-size: 14px; line-height: 1.72; }
         .reasoning-block {
             margin-top: 16px;
             border: 1px solid rgba(179, 157, 255, .3);
@@ -678,8 +691,8 @@
             padding: 15px 16px;
             background: rgba(22, 12, 54, .42);
         }
-        .reasoning-block .ws-label { color: #CBBBFF; }
-        .reasoning-block p { color: #CCBBFF; font-size: 13px; line-height: 1.7; }
+        .reasoning-block .ws-label { color: var(--text-lavender-dim); }
+        .reasoning-block p { color: var(--text-lavender-dim); font-size: 13px; line-height: 1.7; }
         .generated-at { margin-top: 12px; color: var(--text-muted); font-size: 11px; }
 
         .history-title {
@@ -701,9 +714,9 @@
             background: rgba(9, 6, 26, .76);
         }
         .history-head { margin-bottom: 7px; }
-        .history-time { display: block; margin-bottom: 3px; font-size: 11px; font-weight: 600; color: #D0C0FF; }
+        .history-time { display: block; margin-bottom: 3px; font-size: 11px; font-weight: 600; color: var(--text-lavender); }
         .history-meta { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 6px; color: var(--text-soft); font-size: 11px; }
-        .history-body p { color: #D0BFFF; font-size: 12px; line-height: 1.55; margin-bottom: 4px; }
+        .history-body p { color: var(--text-lavender); font-size: 12px; line-height: 1.55; margin-bottom: 4px; }
         .history-body p:last-child { margin-bottom: 0; }
         .history-empty {
             border: 1px dashed rgba(179, 157, 255, .24);
@@ -775,7 +788,7 @@
             border-radius: 10px;
             padding: 13px 14px;
             text-align: center;
-            color: #D0C0FF;
+            color: var(--text-lavender);
             font-size: 12px;
             line-height: 2;
             background: rgba(9, 6, 26, .86);
@@ -796,7 +809,7 @@
         }
         .site-footer a { color: var(--text-soft); text-decoration: none; }
         .site-footer a:hover { color: var(--text); }
-        .site-footer img { height: 28px; opacity: .72; }
+        .site-footer img { height: 28px; opacity: .88; }
 
         @media (max-width: 960px) {
             .topbar { margin: 10px 12px 0; }
@@ -818,6 +831,7 @@
             .method-cols { grid-template-columns: 1fr; }
             .hr-grid { grid-template-columns: 1fr; }
             .onb-choice-grid { grid-template-columns: 1fr; }
+        .chat-form { flex-direction: column; }
         }
     </style>
 </head>
@@ -937,7 +951,7 @@
     </div>
     {{loadChart}}
     <div class="chart-legend">
-        <span><span class="swatch" style="background:#1A73E8;"></span> Fitness (CTL)</span>
+        <span><span class="swatch" style="background:#5B8FE8;"></span> Fitness (CTL)</span>
         <span><span class="swatch" style="background:#F07055;"></span> Fatigue (ATL)</span>
         <span><span class="swatch-dashed" style="color:#2ED3A2;"></span> Readiness (TSB)</span>
     </div>
@@ -965,7 +979,7 @@
             <div class="form-group">
                 <label>How do your legs feel?</label>
                 <div class="slider-row">
-                    <input type="range" name="legFeeling" min="1" max="10" value="{{legFeeling}}" oninput="this.parentNode.querySelector('.slider-val').textContent=this.value+'/10'" />
+                    <input type="range" name="legFeeling" min="1" max="10" value="{{legFeeling}}" oninput="this.parentNode.querySelector('.slider-val').textContent=this.value+'/10'; this.style.setProperty('--val', ((this.value-this.min)/(this.max-this.min)*100)+'%')" />
                     <span class="slider-val">{{legFeeling}}/10</span>
                 </div>
                 <div class="hint">1 = very heavy · 10 = spring in your step</div>
@@ -974,7 +988,7 @@
             <div class="form-group">
                 <label>Mental energy</label>
                 <div class="slider-row">
-                    <input type="range" name="mentalReadiness" min="1" max="10" value="{{mentalReadiness}}" oninput="this.parentNode.querySelector('.slider-val').textContent=this.value+'/10'" />
+                    <input type="range" name="mentalReadiness" min="1" max="10" value="{{mentalReadiness}}" oninput="this.parentNode.querySelector('.slider-val').textContent=this.value+'/10'; this.style.setProperty('--val', ((this.value-this.min)/(this.max-this.min)*100)+'%')" />
                     <span class="slider-val">{{mentalReadiness}}/10</span>
                 </div>
                 <div class="hint">1 = flat / unmotivated · 10 = fired up</div>
@@ -1005,6 +1019,7 @@
         {{workoutCard}}
         <div class="history-title">Workout history</div>
         {{workoutHistory}}
+        {{chatThread}}
     </div>
 </div>
 
@@ -1054,6 +1069,10 @@ document.querySelectorAll('.btn-primary[formaction*="generate"]').forEach(functi
     btn.addEventListener('click', function() {
         btn.classList.add('loading');
     });
+});
+// Initialize slider fill positions
+document.querySelectorAll('.slider-row input[type="range"]').forEach(function(r) {
+    r.style.setProperty('--val', ((r.value - r.min) / (r.max - r.min) * 100) + '%');
 });
 // Make tooltips keyboard-accessible
 document.querySelectorAll('.tip-wrap').forEach(function(wrap) {
