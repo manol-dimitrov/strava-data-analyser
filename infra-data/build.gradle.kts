@@ -5,6 +5,7 @@ plugins {
 
 dependencies {
     implementation(project(":core-domain"))
+    implementation(libs.kotlinx.serialization.json)
 
     testImplementation(libs.kotlin.test)
 }

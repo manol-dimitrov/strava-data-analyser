@@ -29,7 +29,18 @@ class UserSession(
     val tokenStoreKey: String,
     val oauthService: StravaOAuthService?,
     val activityRepository: CachedActivityRepository?
-)
+) {
+    /** Strava athlete ID, populated once after a successful OAuth exchange or token validation. */
+    @Volatile
+    var stravaAthleteId: Long? = null
+
+    /**
+     * Set to true once we have attempted to load a persisted [AthleteProfile] for this session.
+     * Prevents redundant disk reads on every request after the first.
+     */
+    @Volatile
+    var profileLoaded: Boolean = false
+}
 
 /**
  * Thread-safe registry of active user sessions.

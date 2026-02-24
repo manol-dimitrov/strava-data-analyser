@@ -9,19 +9,19 @@
     <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@10..48,500;10..48,700;10..48,800&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <style>
         :root {
-            --bg: #06040E;
-            --bg-2: #0B0820;
-            --surface: #100D24;
-            --surface-soft: #17103A;
-            --surface-strong: #221550;
-            --line: #352A68;
-            --line-soft: #281E56;
-            --text: #EFEDFF;
-            --text-soft: #C0B4E2;
-            --text-muted: #9078C0;
-            --violet: #B39DFF;
-            --violet-2: #8B6EF0;
-            --orange: #FC4C02;
+            --bg: #13181F;
+            --bg-2: #191F2B;
+            --surface: #1E2535;
+            --surface-soft: #232D42;
+            --surface-strong: #2C3A57;
+            --line: #384564;
+            --line-soft: #2B3652;
+            --text: #EDF0F7;
+            --text-soft: #A8B8CC;
+            --text-muted: #6E83A0;
+            --violet: #9B91FF;
+            --violet-2: #7466E0;
+            --orange: #F07055;
             --green: #2ED3A2;
             --amber: #FFBD5B;
             --red: #FF6C84;
@@ -92,10 +92,10 @@
             color: var(--text);
             line-height: 1.45;
             background:
-                radial-gradient(1100px 560px at -4% -10%, rgba(139, 110, 240, .22), transparent 55%),
-                radial-gradient(900px 500px at 108% -6%, rgba(107, 70, 220, .16), transparent 58%),
-                radial-gradient(600px 400px at 52% 100%, rgba(155, 114, 255, .08), transparent 70%),
-                linear-gradient(180deg, #0A0618 0%, var(--bg) 58%, #030110 100%);
+                radial-gradient(1050px 540px at -6% -14%, rgba(116, 102, 224, .22), transparent 56%),
+                radial-gradient(860px 480px at 108% -8%, rgba(63, 108, 160, .16), transparent 60%),
+                radial-gradient(620px 390px at 52% 102%, rgba(43, 84, 128, .1), transparent 70%),
+                linear-gradient(180deg, #161D2B 0%, var(--bg) 58%, #111721 100%);
         }
         /* Grain texture overlay */
         body::after {
@@ -106,7 +106,7 @@
             height: 200%;
             z-index: 9999;
             pointer-events: none;
-            opacity: .028;
+            opacity: .025;
             background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
             animation: grainDrift 8s steps(10) infinite;
         }
@@ -124,7 +124,7 @@
             align-items: center;
             gap: 12px;
             backdrop-filter: blur(12px);
-            background: linear-gradient(120deg, rgba(10, 7, 26, .88), rgba(22, 14, 52, .82));
+            background: linear-gradient(120deg, rgba(25, 31, 43, .9), rgba(30, 37, 53, .84));
             box-shadow: var(--shadow-md);
         }
         .topbar-brand { display: flex; align-items: center; gap: 12px; flex: 1; }
@@ -485,7 +485,7 @@
         }
         .workouts-scroll::-webkit-scrollbar { height: 6px; }
         .workouts-scroll::-webkit-scrollbar-track { background: rgba(155, 114, 255, .2); border-radius: 999px; }
-        .workouts-scroll::-webkit-scrollbar-thumb { background: linear-gradient(90deg, #9B72FF, #FC4C02); border-radius: 999px; }
+        .workouts-scroll::-webkit-scrollbar-thumb { background: linear-gradient(90deg, #9B91FF, #F07055); border-radius: 999px; }
         .workout-item {
             flex: 0 0 230px;
             scroll-snap-align: start;
@@ -938,7 +938,7 @@
     {{loadChart}}
     <div class="chart-legend">
         <span><span class="swatch" style="background:#1A73E8;"></span> Fitness (CTL)</span>
-        <span><span class="swatch" style="background:#FC4C02;"></span> Fatigue (ATL)</span>
+        <span><span class="swatch" style="background:#F07055;"></span> Fatigue (ATL)</span>
         <span><span class="swatch-dashed" style="color:#2ED3A2;"></span> Readiness (TSB)</span>
     </div>
 </div>

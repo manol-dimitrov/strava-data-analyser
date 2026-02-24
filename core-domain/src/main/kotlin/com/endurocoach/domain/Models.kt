@@ -1,6 +1,7 @@
 package com.endurocoach.domain
 
 import java.time.LocalDate
+import kotlinx.serialization.Serializable
 
 data class Activity(
     val date: LocalDate,
@@ -65,4 +66,19 @@ data class LoadSnapshot(
     /** Foster strain over the last 10 days: mean(last10 TRIMP) × monotony(last10).
      *  Captures accumulated fatigue from both volume and uniformity. */
     val strain10: Double = 0.0
+)
+
+/**
+ * Persistent athlete profile captured during the onboarding wizard.
+ * Keyed by Strava athlete ID so it survives cookie clears and server restarts.
+ */
+@Serializable
+data class AthleteProfile(
+    val stravaAthleteId: Long,
+    val sportFocus: String,
+    val maxHr: Int,
+    val restingHr: Int,
+    val targetEventName: String,
+    val targetEventDate: String,
+    val completedAt: String
 )

@@ -13,3 +13,9 @@ interface TokenStore {
     fun loadToken(key: String): String?
     fun deleteToken(key: String)
 }
+
+interface AthleteProfileStore {
+    fun save(profile: AthleteProfile)
+    fun load(stravaAthleteId: Long): AthleteProfile?
+    fun delete(stravaAthleteId: Long)
+}

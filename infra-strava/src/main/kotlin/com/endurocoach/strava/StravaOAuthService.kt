@@ -3,6 +3,8 @@ package com.endurocoach.strava
 import com.endurocoach.domain.TokenStore
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
@@ -46,6 +48,18 @@ class StravaOAuthService(
 
         persistToken(token)
         return token
+    }
+
+    /**
+     * Fetches the authenticated Strava athlete's ID.
+     * Requires a valid access token to already be stored (call after [exchangeCode] or after
+     * [validAccessToken] confirms the token is live).
+     */
+    suspend fun fetchAthleteId(): Long {
+        val accessToken = validAccessToken()
+        return httpClient.get("https://www.strava.com/api/v3/athlete") {
+            header("Authorization", "Bearer $accessToken")
+        }.body<StravaAthleteDto>().id
     }
 
     suspend fun validAccessToken(): String {

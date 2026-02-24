@@ -2,6 +2,7 @@ package com.endurocoach
 
 import com.endurocoach.config.readRuntimeConfig
 import com.endurocoach.data.EncryptedFileTokenStore
+import com.endurocoach.data.EncryptedFileAthleteProfileStore
 import com.endurocoach.domain.Activity
 import com.endurocoach.domain.LlmStructuredClient
 import com.endurocoach.domain.LoadSnapshot
@@ -71,6 +72,7 @@ fun Application.module() {
     val runtimeConfig = readRuntimeConfig()
     val httpClient = HttpClientFactory.create()
     val tokenStore = EncryptedFileTokenStore()
+    val athleteProfileStore = EncryptedFileAthleteProfileStore()
     val stravaConfig = StravaConfig.fromEnv()
     val llmClient = createLlmClient(runtimeConfig, httpClient)
     val dashboardTemplate = loadTemplate("templates/dashboard.html")
@@ -91,6 +93,7 @@ fun Application.module() {
                 sessionRegistry = sessionRegistry,
                 stravaConfigured = stravaConfig != null,
                 tokenStore = tokenStore,
+                athleteProfileStore = athleteProfileStore,
                 loadProvider = { repo, maxHr, restingHr ->
                     buildLoadSnapshot(
                         repository = repo,
@@ -261,6 +264,10 @@ fun Application.module() {
 
             runCatching { oauth.exchangeCode(code) }
                 .onSuccess {
+                    // Cache the Strava athlete ID for this session so the profile
+                    // can be loaded / saved without re-fetching on every request.
+                    runCatching { oauth.fetchAthleteId() }
+                        .onSuccess { id -> session.stravaAthleteId = id }
                     call.response.cookies.append(name = SESSION_COOKIE, value = session.id, path = "/", maxAge = SESSION_MAX_AGE)
                     call.respondRedirect("/")
                 }

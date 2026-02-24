@@ -40,3 +40,9 @@ data class StravaActivityDto(
     @SerialName("max_heartrate") val maxHeartRate: Double? = null,
     @SerialName("total_elevation_gain") val totalElevationGain: Double? = null
 )
+
+/** Minimal Strava athlete response; only the ID field is required. */
+@Serializable
+data class StravaAthleteDto(
+    val id: Long
+)

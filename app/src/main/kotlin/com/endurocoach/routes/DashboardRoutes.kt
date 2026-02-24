@@ -1,6 +1,8 @@
 package com.endurocoach.routes
 
 import com.endurocoach.domain.DailyCheckIn
+import com.endurocoach.domain.AthleteProfile
+import com.endurocoach.domain.AthleteProfileStore
 import com.endurocoach.domain.LlmStructuredClient
 import com.endurocoach.domain.LoadSnapshot
 import com.endurocoach.domain.TokenStore
@@ -74,6 +76,25 @@ class DashboardStateStore {
         state = state.copy(onboarding = onboarding)
     }
 
+    /**
+     * Hydrates session state from a persisted [AthleteProfile], marking onboarding as
+     * complete so returning users skip the wizard.
+     */
+    @Synchronized
+    fun hydrateFromProfile(profile: AthleteProfile) {
+        state = state.copy(
+            maxHr = profile.maxHr,
+            restingHr = profile.restingHr,
+            onboarding = OnboardingState(
+                step = 3,
+                sportFocus = profile.sportFocus,
+                targetEventName = profile.targetEventName,
+                targetEventDate = profile.targetEventDate,
+                completed = true
+            )
+        )
+    }
+
     @Synchronized
     fun updateWorkout(snapshotSource: String, workout: WorkoutPlan) {
         val entry = WorkoutHistoryEntry(
@@ -108,6 +129,7 @@ data class DashboardDependencies(
     val sessionRegistry: SessionRegistry,
     val stravaConfigured: Boolean = false,
     val tokenStore: TokenStore,
+    val athleteProfileStore: AthleteProfileStore,
     val loadProvider: suspend (CachedActivityRepository?, Int, Int) -> Triple<String, LoadSnapshot, List<com.endurocoach.domain.Activity>>
 )
 
@@ -145,6 +167,23 @@ fun Route.installDashboardRoutes(dependencies: DashboardDependencies) {
             )
             call.respondText(html, ContentType.Text.Html)
             return@get
+        }
+
+        // ----- Authenticated: resolve athlete ID and load persisted profile -----
+        if (session.stravaAthleteId == null && session.oauthService != null) {
+            runCatching { session.oauthService.fetchAthleteId() }
+                .onSuccess { session.stravaAthleteId = it }
+        }
+
+        // Load the persisted athlete profile once per session (skips if already hydrated)
+        if (!session.profileLoaded) {
+            session.profileLoaded = true
+            val athleteId = session.stravaAthleteId
+            if (athleteId != null && !session.dashboardState.read().onboarding.completed) {
+                dependencies.athleteProfileStore.load(athleteId)?.let { profile ->
+                    session.dashboardState.hydrateFromProfile(profile)
+                }
+            }
         }
 
         // ----- Authenticated: load data and render the full dashboard -----
@@ -229,6 +268,24 @@ fun Route.installDashboardRoutes(dependencies: DashboardDependencies) {
                 completed = completed
             )
         )
+
+        // Persist profile to disk when the athlete finishes the wizard
+        if (completed) {
+            val athleteId = session.stravaAthleteId
+            if (athleteId != null) {
+                dependencies.athleteProfileStore.save(
+                    AthleteProfile(
+                        stravaAthleteId = athleteId,
+                        sportFocus = sportFocus,
+                        maxHr = maxHr,
+                        restingHr = restingHr,
+                        targetEventName = targetEventName,
+                        targetEventDate = targetEventDate,
+                        completedAt = java.time.Instant.now().toString()
+                    )
+                )
+            }
+        }
 
         call.respondRedirect("/")
     }
