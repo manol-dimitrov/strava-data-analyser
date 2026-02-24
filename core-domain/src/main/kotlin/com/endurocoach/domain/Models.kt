@@ -69,6 +69,27 @@ data class LoadSnapshot(
 )
 
 /**
+ * A single message in a coaching conversation thread.
+ * role is "user" (athlete) or "model" (coach/LLM), following Gemini's convention.
+ */
+data class ConversationMessage(
+    val role: String,
+    val content: String,
+    val timestamp: String
+)
+
+/**
+ * Request payload for a follow-up coaching chat message.
+ * The system instruction contains the full coaching context; history is the
+ * (already trimmed) prior messages; userMessage is the new athlete input.
+ */
+data class WorkoutChatRequest(
+    val systemInstruction: String,
+    val history: List<ConversationMessage>,
+    val userMessage: String
+)
+
+/**
  * Persistent athlete profile captured during the onboarding wizard.
  * Keyed by Strava athlete ID so it survives cookie clears and server restarts.
  */

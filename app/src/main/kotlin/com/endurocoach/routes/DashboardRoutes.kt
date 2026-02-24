@@ -1,13 +1,17 @@
 package com.endurocoach.routes
 
+import com.endurocoach.domain.ConversationMessage
 import com.endurocoach.domain.DailyCheckIn
 import com.endurocoach.domain.AthleteProfile
 import com.endurocoach.domain.AthleteProfileStore
+import com.endurocoach.domain.LlmChatClient
 import com.endurocoach.domain.LlmStructuredClient
 import com.endurocoach.domain.LoadSnapshot
 import com.endurocoach.domain.TokenStore
+import com.endurocoach.domain.WorkoutChatRequest
 import com.endurocoach.domain.WorkoutPlan
 import com.endurocoach.domain.WorkoutRequest
+import com.endurocoach.llm.ConversationTrimmer
 import com.endurocoach.session.SESSION_COOKIE
 import com.endurocoach.session.SESSION_MAX_AGE
 import com.endurocoach.session.SessionRegistry
@@ -35,6 +39,7 @@ data class DashboardState(
     val onboarding: OnboardingState = OnboardingState(),
     val latestWorkout: WorkoutPlan? = null,
     val workoutHistory: List<WorkoutHistoryEntry> = emptyList(),
+    val conversationThread: List<ConversationMessage> = emptyList(),
     val latestError: String? = null,
     val source: String = "demo",
     val generatedAt: Instant? = null
@@ -103,10 +108,17 @@ class DashboardStateStore {
             checkIn = state.checkIn,
             workout = workout
         )
+        // Anchor message starts/continues the chat thread for this workout
+        val anchor = ConversationMessage(
+            role = "model",
+            content = "Session prescribed. Main set: ${workout.mainSet.take(120).trimEnd()}. Ask me anything about it or request adjustments.",
+            timestamp = Instant.now().toString()
+        )
         state = state.copy(
             source = snapshotSource,
             latestWorkout = workout,
             workoutHistory = (listOf(entry) + state.workoutHistory).take(20),
+            conversationThread = (state.conversationThread + anchor).takeLast(100),
             latestError = null,
             generatedAt = Instant.now()
         )
@@ -120,11 +132,32 @@ class DashboardStateStore {
             generatedAt = Instant.now()
         )
     }
+
+    @Synchronized
+    fun appendUserMessage(content: String) {
+        val msg = ConversationMessage(
+            role = "user",
+            content = content,
+            timestamp = Instant.now().toString()
+        )
+        state = state.copy(conversationThread = (state.conversationThread + msg).takeLast(100))
+    }
+
+    @Synchronized
+    fun appendAssistantMessage(content: String) {
+        val msg = ConversationMessage(
+            role = "model",
+            content = content,
+            timestamp = Instant.now().toString()
+        )
+        state = state.copy(conversationThread = (state.conversationThread + msg).takeLast(100))
+    }
 }
 
 data class DashboardDependencies(
     val templateHtml: String,
     val llmClient: LlmStructuredClient,
+    val chatClient: LlmChatClient,
     val philosophyRulePacks: Map<String, String>,
     val sessionRegistry: SessionRegistry,
     val stravaConfigured: Boolean = false,
@@ -339,6 +372,116 @@ fun Route.installDashboardRoutes(dependencies: DashboardDependencies) {
 
         call.respondRedirect("/")
     }
+
+    post("/dashboard/chat") {
+        val sessionId = call.request.cookies[SESSION_COOKIE]
+        val session = dependencies.sessionRegistry.getOrCreate(sessionId)
+        if (sessionId != session.id) {
+            call.response.cookies.append(name = SESSION_COOKIE, value = session.id, path = "/", maxAge = SESSION_MAX_AGE)
+        }
+
+        val params = call.receiveParameters()
+        val message = params["message"]?.trim() ?: ""
+
+        val state = session.dashboardState.read()
+        if (message.isBlank() || state.latestWorkout == null) {
+            call.respondRedirect("/")
+            return@post
+        }
+
+        session.dashboardState.appendUserMessage(message)
+
+        // Trim history to char budget before sending to LLM (excluding the message just appended)
+        val historyForLlm = ConversationTrimmer.trimToCharBudget(
+            messages = state.conversationThread, // snapshot before appending
+            maxChars = 12_000
+        )
+        val systemInstruction = buildChatSystemInstruction(state)
+
+        runCatching {
+            dependencies.chatClient.chat(
+                WorkoutChatRequest(
+                    systemInstruction = systemInstruction,
+                    history = historyForLlm,
+                    userMessage = message
+                )
+            )
+        }.onSuccess { response ->
+            session.dashboardState.appendAssistantMessage(response)
+        }.onFailure {
+            session.dashboardState.appendAssistantMessage("Sorry, I couldn't process that. Please try again.")
+        }
+
+        call.respondRedirect("/")
+    }
+}
+
+private fun buildChatSystemInstruction(state: DashboardState): String {
+    val profile = state.onboarding
+    val workout = state.latestWorkout
+
+    val profileBlock = buildString {
+        appendLine("Athlete profile:")
+        appendLine("- Sport focus: ${profile.sportFocus}")
+        appendLine("- Max HR: ${state.maxHr} bpm | Resting HR: ${state.restingHr} bpm")
+        val eventLine = profile.targetEventName.ifBlank { "Not set" } +
+            if (profile.targetEventDate.isNotBlank()) " on ${profile.targetEventDate}" else ""
+        appendLine("- Target event: $eventLine")
+    }.trimEnd()
+
+    val workoutBlock = if (workout != null) buildString {
+        appendLine("\nLatest prescribed workout:")
+        appendLine("- Warm-up: ${workout.warmup}")
+        appendLine("- Main set: ${workout.mainSet}")
+        appendLine("- Cool-down: ${workout.cooldown}")
+        appendLine("- Coach reasoning: ${workout.coachReasoning}")
+    }.trimEnd() else "\nNo workout has been prescribed yet."
+
+    val previousBlock = if (state.workoutHistory.size > 1) buildString {
+        appendLine("\nPrevious sessions (brief context, most recent first):")
+        state.workoutHistory.drop(1).take(2).forEach { entry ->
+            appendLine("- ${entry.generatedAt.toString().take(10)}: ${entry.workout.mainSet.take(120).trimEnd()}")
+        }
+    }.trimEnd() else ""
+
+    return """
+You are Maestro, an elite endurance coach. You are in a follow-up coaching conversation with your athlete about their training.
+
+$profileBlock
+$workoutBlock$previousBlock
+
+Coaching rules:
+- Be direct, precise, and coaching-forward. No filler language or sycophancy.
+- If the athlete asks to adjust the session, suggest specific modifications in plain, actionable language.
+- Reference physiological reasoning (CTL/ATL/TSB, ACWR, periodisation) when relevant.
+- Keep responses concise unless the question genuinely warrants detail.
+- Treat the athlete as a serious adult who wants honest, actionable guidance.
+- If asked about nutrition, sleep, or recovery, give evidence-based guidance relevant to their training context.""".trimIndent()
+}
+
+private fun renderChatThread(thread: List<ConversationMessage>, hasWorkout: Boolean): String {
+    if (!hasWorkout) return ""
+
+    val messages = if (thread.isEmpty()) {
+        "<p class=\"chat-empty\">Generate a session, then ask your coach anything about it.</p>"
+    } else {
+        thread.joinToString("\n") { msg ->
+            val roleClass = if (msg.role == "user") "chat-user" else "chat-coach"
+            val label = if (msg.role == "user") "You" else "Coach"
+            """<div class="chat-msg $roleClass"><span class="chat-label">$label</span><p>${escapeHtml(msg.content)}</p></div>"""
+        }
+    }
+
+    return """
+<div class="chat-section">
+    <div class="history-title">Ask your coach</div>
+    <div class="chat-thread" id="chat-thread">$messages</div>
+    <form class="chat-form" action="/dashboard/chat" method="post">
+        <input class="chat-input" type="text" name="message" placeholder="Ask about this session, request adjustments\u2026" autocomplete="off" maxlength="500" required />
+        <button class="btn btn-primary chat-send" type="submit">Send</button>
+    </form>
+</div>
+""".trimIndent()
 }
 
 private fun parseCheckIn(
@@ -675,6 +818,7 @@ private fun renderDashboard(
     // Recent workouts strip
     val workoutsStrip = renderWorkoutsStrip(activities)
     val workoutHistory = renderWorkoutHistory(state.workoutHistory)
+    val chatThread = renderChatThread(state.conversationThread, state.latestWorkout != null)
 
     // ACWR badge
     val acwrBadgeClass = when {
@@ -812,6 +956,7 @@ private fun renderDashboard(
         .replace("{{philosophyOptions}}", options)
         .replace("{{workoutCard}}", workoutCard)
         .replace("{{workoutHistory}}", workoutHistory)
+        .replace("{{chatThread}}", chatThread)
         .replace("{{errorCard}}", errorCard)
         // dashboardContent is only used by the welcome flow; in the full dashboard it's a no-op
         .replace("{{dashboardContent}}", "")

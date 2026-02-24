@@ -4,8 +4,10 @@ import com.endurocoach.config.readRuntimeConfig
 import com.endurocoach.data.EncryptedFileTokenStore
 import com.endurocoach.data.EncryptedFileAthleteProfileStore
 import com.endurocoach.domain.Activity
+import com.endurocoach.domain.LlmChatClient
 import com.endurocoach.domain.LlmStructuredClient
 import com.endurocoach.domain.LoadSnapshot
+import com.endurocoach.domain.WorkoutChatRequest
 import com.endurocoach.domain.WorkoutRequest
 import com.endurocoach.metrics.BanisterTrimpCalculator
 import com.endurocoach.metrics.DemoActivityGenerator
@@ -75,6 +77,10 @@ fun Application.module() {
     val athleteProfileStore = EncryptedFileAthleteProfileStore()
     val stravaConfig = StravaConfig.fromEnv()
     val llmClient = createLlmClient(runtimeConfig, httpClient)
+    // GeminiClient implements both LlmStructuredClient and LlmChatClient;
+    // fall back to a stub for other providers.
+    val chatClient: LlmChatClient = (llmClient as? LlmChatClient)
+        ?: UnavailableChatClient("Chat not available with the current LLM provider")
     val dashboardTemplate = loadTemplate("templates/dashboard.html")
     val sessionRegistry = SessionRegistry(
         stravaConfig = stravaConfig,
@@ -89,6 +95,7 @@ fun Application.module() {
             DashboardDependencies(
                 templateHtml = dashboardTemplate,
                 llmClient = llmClient,
+                chatClient = chatClient,
                 philosophyRulePacks = runtimeConfig.philosophyRulePacks,
                 sessionRegistry = sessionRegistry,
                 stravaConfigured = stravaConfig != null,
@@ -405,6 +412,12 @@ private class UnavailableLlmClient(
     private val reason: String
 ) : LlmStructuredClient {
     override suspend fun generateWorkoutPlan(request: WorkoutRequest) = error(reason)
+}
+
+private class UnavailableChatClient(
+    private val reason: String
+) : LlmChatClient {
+    override suspend fun chat(request: WorkoutChatRequest) = error(reason)
 }
 
 private suspend fun selectActivities(

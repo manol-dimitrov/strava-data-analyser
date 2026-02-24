@@ -19,3 +19,11 @@ interface AthleteProfileStore {
     fun load(stravaAthleteId: Long): AthleteProfile?
     fun delete(stravaAthleteId: Long)
 }
+
+/**
+ * Free-form conversational LLM interface for coaching follow-ups.
+ * Unlike [LlmStructuredClient], returns plain prose rather than validated JSON.
+ */
+interface LlmChatClient {
+    suspend fun chat(request: WorkoutChatRequest): String
+}

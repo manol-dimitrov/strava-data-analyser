@@ -1,6 +1,9 @@
 package com.endurocoach.llm
 
+import com.endurocoach.domain.ConversationMessage
+import com.endurocoach.domain.LlmChatClient
 import com.endurocoach.domain.LlmStructuredClient
+import com.endurocoach.domain.WorkoutChatRequest
 import com.endurocoach.domain.WorkoutPlan
 import com.endurocoach.domain.WorkoutRequest
 import io.ktor.client.HttpClient
@@ -14,7 +17,7 @@ class GeminiClient(
     private val config: GeminiConfig,
     private val httpClient: HttpClient,
     private val structuredWorkoutGenerator: StructuredWorkoutGenerator = StructuredWorkoutGenerator()
-) : LlmStructuredClient {
+) : LlmStructuredClient, LlmChatClient {
 
     override suspend fun generateWorkoutPlan(request: WorkoutRequest): WorkoutPlan {
         return structuredWorkoutGenerator.generate {
@@ -52,6 +55,40 @@ class GeminiClient(
             outputPart?.text?.trim()
                 ?: error("Gemini returned an empty response")
         }
+    }
+
+    override suspend fun chat(request: WorkoutChatRequest): String {
+        val url = "${config.baseUrl}/v1beta/models/${config.model}:generateContent?key=${config.apiKey}"
+
+        val historyContents = request.history.map { msg ->
+            GeminiContent(
+                role = msg.role,
+                parts = listOf(GeminiPart(text = msg.content))
+            )
+        }
+        val userContent = GeminiContent(
+            role = "user",
+            parts = listOf(GeminiPart(text = request.userMessage))
+        )
+
+        val response = httpClient.post(url) {
+            contentType(ContentType.Application.Json)
+            setBody(
+                GeminiGenerateRequest(
+                    systemInstruction = GeminiContent(
+                        parts = listOf(GeminiPart(text = request.systemInstruction))
+                    ),
+                    contents = historyContents + userContent,
+                    generationConfig = GeminiGenerationConfig(temperature = 0.6)
+                )
+            )
+        }.body<GeminiGenerateResponse>()
+
+        val parts = response.candidates.firstOrNull()?.content?.parts
+            ?: error("Gemini returned an empty chat response")
+
+        val outputPart = parts.lastOrNull { it.thought != true } ?: parts.lastOrNull()
+        return outputPart?.text?.trim() ?: error("Gemini returned an empty chat response")
     }
 
     private fun systemPrompt(): String {
