@@ -19,6 +19,7 @@ import com.endurocoach.strava.CachedActivityRepository
 import com.endurocoach.metrics.BanisterTrimpCalculator
 import io.ktor.http.ContentType
 import io.ktor.server.request.receiveParameters
+import io.ktor.server.response.respond
 import io.ktor.server.response.respondRedirect
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
@@ -370,7 +371,7 @@ fun Route.installDashboardRoutes(dependencies: DashboardDependencies) {
                 )
             }
 
-        call.respondRedirect("/")
+        call.respondRedirect("/?tab=coach")
     }
 
     post("/dashboard/chat") {
@@ -385,7 +386,7 @@ fun Route.installDashboardRoutes(dependencies: DashboardDependencies) {
 
         val state = session.dashboardState.read()
         if (message.isBlank() || state.latestWorkout == null) {
-            call.respondRedirect("/")
+            call.respondRedirect("/?tab=coach")
             return@post
         }
 
@@ -398,6 +399,9 @@ fun Route.installDashboardRoutes(dependencies: DashboardDependencies) {
         )
         val systemInstruction = buildChatSystemInstruction(state)
 
+        val acceptsJson = call.request.headers["Accept"]?.contains("application/json") == true
+
+        var chatResponse = "Sorry, I couldn't process that. Please try again."
         runCatching {
             dependencies.chatClient.chat(
                 WorkoutChatRequest(
@@ -407,12 +411,17 @@ fun Route.installDashboardRoutes(dependencies: DashboardDependencies) {
                 )
             )
         }.onSuccess { response ->
+            chatResponse = response
             session.dashboardState.appendAssistantMessage(response)
         }.onFailure {
-            session.dashboardState.appendAssistantMessage("Sorry, I couldn't process that. Please try again.")
+            session.dashboardState.appendAssistantMessage(chatResponse)
         }
 
-        call.respondRedirect("/")
+        if (acceptsJson) {
+            call.respond(mapOf("role" to "model", "content" to chatResponse))
+        } else {
+            call.respondRedirect("/?tab=coach")
+        }
     }
 }
 
@@ -460,10 +469,15 @@ Coaching rules:
 }
 
 private fun renderChatThread(thread: List<ConversationMessage>, hasWorkout: Boolean): String {
-    if (!hasWorkout) return ""
+    if (!hasWorkout) return """
+<div class="card anim-in">
+    <div class="card-title"><span class="title-icon" aria-hidden="true">&#x1F4AC;</span> Ask Your Coach</div>
+    <p class="chat-empty">Generate a session above, then ask your coach anything about it.</p>
+</div>
+""".trimIndent()
 
     val messages = if (thread.isEmpty()) {
-        "<p class=\"chat-empty\">Generate a session, then ask your coach anything about it.</p>"
+        "<p class=\"chat-empty\">No messages yet. Ask your coach anything about the prescribed session.</p>"
     } else {
         thread.joinToString("\n") { msg ->
             val roleClass = if (msg.role == "user") "chat-user" else "chat-coach"
@@ -473,13 +487,15 @@ private fun renderChatThread(thread: List<ConversationMessage>, hasWorkout: Bool
     }
 
     return """
-<div class="chat-section">
-    <div class="history-title">Ask your coach</div>
-    <div class="chat-thread" id="chat-thread">$messages</div>
-    <form class="chat-form" action="/dashboard/chat" method="post">
-        <input class="chat-input" type="text" name="message" placeholder="Ask about this session, request adjustments\u2026" autocomplete="off" maxlength="500" required />
-        <button class="btn btn-primary chat-send" type="submit">Send</button>
-    </form>
+<div class="card anim-in">
+    <div class="card-title"><span class="title-icon" aria-hidden="true">&#x1F4AC;</span> Ask Your Coach</div>
+    <div class="chat-section">
+        <div class="chat-thread" id="chat-thread">$messages</div>
+        <form class="chat-form" id="chat-form" action="/dashboard/chat" method="post">
+            <textarea class="chat-input" name="message" placeholder="Ask about this session, request adjustments&#x2026;" autocomplete="off" maxlength="500" required rows="2"></textarea>
+            <button class="btn btn-primary chat-send" type="submit">Send</button>
+        </form>
+    </div>
 </div>
 """.trimIndent()
 }
