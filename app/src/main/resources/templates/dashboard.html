@@ -4,16 +4,18 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Maestro — AI Endurance Coach</title>
+    <meta name="description" content="Maestro — AI-powered endurance coaching. Banister CTL/ATL/TSB metrics from your Strava data with daily AI workout prescriptions." />
+    <meta property="og:title" content="Maestro — AI Endurance Coach" />
+    <meta property="og:description" content="Data-driven coaching using your Strava training load. CTL, ATL, TSB analytics with AI-generated daily workout prescriptions." />
+    <meta property="og:type" content="website" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@10..48,500;10..48,700;10..48,800&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <style>
         :root {
             --bg: #13181F;
-            --bg-2: #191F2B;
             --surface: #1E2535;
             --surface-soft: #232D42;
-            --surface-strong: #2C3A57;
             --line: #384564;
             --line-soft: #2B3652;
             --text: #EDF0F7;
@@ -77,7 +79,7 @@
             left: 16px;
             z-index: 100;
             padding: 10px 18px;
-            background: var(--surface-strong);
+            background: var(--surface-soft);
             color: var(--text);
             border: 1px solid var(--line);
             border-radius: 10px;
@@ -254,7 +256,7 @@
             display: flex;
             justify-content: center;
         }
-        .strava-powered img { height: 24px; opacity: .74; }
+        .strava-powered img { height: 24px; opacity: .88; }
 
         .welcome-features {
             margin-top: 28px;
@@ -368,9 +370,10 @@
             letter-spacing: 1.2px;
             font-weight: 700;
             padding-left: 8px;
-            margin-top: 4px;
+            margin-top: 16px;
             border-left: 2px solid var(--violet-2);
         }
+        .metrics-master > .metrics-section-label:first-child { margin-top: 2px; }
         .metric-card { padding: 18px; display: flex; flex-direction: column; gap: 7px; transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
         .metric-card:hover { transform: translateY(-2px); box-shadow: 0 14px 28px rgba(0, 0, 0, .38); border-color: rgba(179, 157, 255, .34); }
         .metric-card.span-4 { grid-column: span 4; }
@@ -398,7 +401,7 @@
             padding-top: 11px;
             color: var(--text-soft);
             font-size: 12px;
-            line-height: 1.62;
+            line-height: 1.6;
         }
 
         .badge {
@@ -438,7 +441,7 @@
             width: 220px;
             padding: 8px 10px;
             border-radius: 10px;
-            border: 1px solid rgba(179, 157, 255, .2);
+            border: 1px solid rgba(179, 157, 255, .5);
             background: #080320;
             color: #E4D8FF;
             font-size: 11px;
@@ -469,16 +472,7 @@
             margin-bottom: 16px;
         }
         .workouts-card { position: relative; }
-        .workouts-card::after {
-            content: '';
-            position: absolute;
-            right: 0; top: 58px; bottom: 14px;
-            width: 72px;
-            background: linear-gradient(to right, transparent, var(--surface) 88%);
-            pointer-events: none;
-            z-index: 2;
-            border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
-        }
+        /* fade scrollbar edge with CSS mask — no fragile pixel anchors */
         .section-header {
             display: flex;
             align-items: baseline;
@@ -499,6 +493,8 @@
             gap: 12px;
             padding-bottom: 8px;
             scroll-snap-type: x mandatory;
+            -webkit-mask-image: linear-gradient(to right, black 92%, transparent 100%);
+            mask-image: linear-gradient(to right, black 92%, transparent 100%);
         }
         .workouts-scroll::-webkit-scrollbar { height: 6px; }
         .workouts-scroll::-webkit-scrollbar-track { background: rgba(155, 114, 255, .2); border-radius: 999px; }
@@ -546,7 +542,7 @@
         .wi-stat-value { color: var(--text); font-size: 12px; font-weight: 600; }
         .wi-trimp-row { display: flex; align-items: center; gap: 8px; }
         .wi-trimp-bar { flex: 1; height: 5px; border-radius: 999px; overflow: hidden; background: rgba(155, 114, 255, .24); }
-        .wi-trimp-fill { height: 100%; border-radius: 999px; }
+        .wi-trimp-fill { height: 100%; border-radius: 999px; transition: width .35s ease; }
         .wi-trimp-val { min-width: 28px; text-align: right; font-size: 11px; font-weight: 700; }
         .workouts-empty { color: var(--text-soft); text-align: center; font-size: 13px; padding: 24px 12px; }
 
@@ -655,10 +651,12 @@
         }
         .btn-ghost {
             background: rgba(16, 8, 44, .64);
-            color: var(--text-soft);
-            border: 1px solid rgba(179, 157, 255, .24);
+            color: var(--text-muted);
+            border: 1px solid rgba(179, 157, 255, .2);
+            font-size: 12px;
+            padding: 10px 16px;
         }
-        .btn-ghost:hover { color: var(--text); border-color: rgba(179, 157, 255, .42); transform: translateY(-1px); }
+        .btn-ghost:hover { color: var(--text-soft); border-color: rgba(179, 157, 255, .38); transform: translateY(-1px); }
         .btn-ghost:active { transform: translateY(0); }
 
         /* Focus-visible for all interactive elements */
@@ -682,8 +680,8 @@
         .workout-section:last-of-type { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
         .ws-header { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
         .ws-icon { font-size: 14px; }
-        .ws-label { color: #9B84D4; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
-        .workout-section p { color: var(--text-lavender); font-size: 14px; line-height: 1.72; }
+        .ws-label { color: var(--violet-2); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
+        .workout-section p { color: var(--text-lavender); font-size: 14px; line-height: 1.7; }
         .reasoning-block {
             margin-top: 16px;
             border: 1px solid rgba(179, 157, 255, .3);
@@ -716,7 +714,7 @@
         .history-head { margin-bottom: 7px; }
         .history-time { display: block; margin-bottom: 3px; font-size: 11px; font-weight: 600; color: var(--text-lavender); }
         .history-meta { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 6px; color: var(--text-soft); font-size: 11px; }
-        .history-body p { color: var(--text-lavender); font-size: 12px; line-height: 1.55; margin-bottom: 4px; }
+        .history-body p { color: var(--text-lavender); font-size: 12px; line-height: 1.6; margin-bottom: 4px; }
         .history-body p:last-child { margin-bottom: 0; }
         .history-empty {
             border: 1px dashed rgba(179, 157, 255, .24);
@@ -726,6 +724,28 @@
             text-align: center;
             font-size: 12px;
         }
+        .history-ephemeral-note {
+            margin-top: 8px;
+            color: var(--text-muted);
+            font-size: 11px;
+            text-align: right;
+        }
+        .onb-skip-wrap {
+            text-align: center;
+            margin-top: 12px;
+        }
+        .onb-skip-link {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-family: 'IBM Plex Sans', sans-serif;
+            font-size: 12px;
+            cursor: pointer;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+            padding: 4px;
+        }
+        .onb-skip-link:hover { color: var(--text-soft); }
 
         /* ---- Tab bar ---- */
         .tab-bar {
@@ -765,7 +785,7 @@
 
         /* ---- Coach tab layout ---- */
         .coach-layout {
-            max-width: 860px;
+            max-width: var(--max-w);
             margin: 0 auto;
             display: flex;
             flex-direction: column;
@@ -775,8 +795,9 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 14px;
+            align-items: stretch;
         }
-        .coach-input-bar .card { margin-bottom: 0; }
+        .coach-input-bar .card { margin-bottom: 0; height: 100%; }
         .coach-input-bar .form-group { margin-bottom: 12px; }
         .coach-input-bar .btn-row { margin-top: 14px; }
         .coach-input-bar .card-title { margin-bottom: 14px; font-size: 15px; }
@@ -785,12 +806,12 @@
         .chat-section { margin-top: 0; }
         .chat-thread {
             display: flex; flex-direction: column; gap: 10px;
-            min-height: 180px; max-height: 480px; overflow-y: auto;
+            min-height: 80px; max-height: 480px; overflow-y: auto;
             padding: 12px 0 8px; scroll-behavior: smooth;
         }
         .chat-msg {
             max-width: 82%; padding: 12px 16px; border-radius: 14px;
-            font-size: 14px; line-height: 1.65;
+            font-size: 14px; line-height: 1.6;
         }
         .chat-msg p { color: var(--text-lavender); margin: 0; }
         .chat-msg .chat-label {
@@ -862,6 +883,7 @@
             color: var(--text-soft);
             background: rgba(16, 8, 44, .56);
             font-size: 13px;
+            font-weight: 600;
             cursor: pointer;
         }
         .onb-choice input { accent-color: #8B6EF0; }
@@ -905,6 +927,18 @@
             font-family: 'IBM Plex Sans', sans-serif;
         }
 
+        /* TSB readiness pill in topbar */
+        .tsb-topbar-pill {
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: -.02em;
+            padding: 4px 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, .1);
+            background: rgba(0, 0, 0, .22);
+        }
+
         .site-footer {
             max-width: var(--max-w);
             margin: 0 auto;
@@ -921,10 +955,12 @@
         .site-footer a:hover { color: var(--text); }
         .site-footer img { height: 28px; opacity: .88; }
 
+        @media (max-width: 1024px) {
+            .metric-card.span-3 { grid-column: span 6; }
+        }
         @media (max-width: 960px) {
             .topbar { margin: 10px 12px 0; }
             .tab-bar { margin: 10px 12px 0; }
-            .metric-card.span-3 { grid-column: span 6; }
             .hero-card { flex-wrap: wrap; gap: 18px; }
             .coach-input-bar { grid-template-columns: 1fr; }
         }
@@ -1077,13 +1113,13 @@
     </div>
     {{loadChart}}
     <div class="chart-legend">
-        <span><span class="swatch" style="background:#5B8FE8;"></span> Fitness (CTL)</span>
+        <span><span class="swatch" style="background:#9B91FF;"></span> Fitness (CTL)</span>
         <span><span class="swatch" style="background:#F07055;"></span> Fatigue (ATL)</span>
         <span><span class="swatch-dashed" style="color:#2ED3A2;"></span> Readiness (TSB)</span>
     </div>
 </div>
 
-<details class="method-disclosure anim-in anim-d6">
+<details class="method-disclosure anim-in anim-d6" id="detail-method">
     <summary><span class="chevron"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span> Model + methodology</summary>
     <div class="method-body-wrap">
         <h3>The Banister Impulse-Response Model</h3>
@@ -1177,7 +1213,7 @@
 
     {{chatThread}}
 
-    <details class="coach-workout-history">
+    <details class="coach-workout-history" id="detail-history">
         <summary><span class="chevron"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span> Workout history</summary>
         {{workoutHistory}}
     </details>
@@ -1226,6 +1262,10 @@
     var urlTab = new URLSearchParams(window.location.search).get('tab');
     var stored = null;
     try { stored = localStorage.getItem('maestro_tab'); } catch(e) {}
+    // Persist URL param to localStorage immediately before we strip it from the URL
+    if (urlTab === 'coach' || urlTab === 'dashboard') {
+        try { localStorage.setItem('maestro_tab', urlTab); } catch(e) {}
+    }
     var initial = (urlTab === 'coach' || urlTab === 'dashboard') ? urlTab : (stored || 'dashboard');
     switchTab(initial);
     // Clean URL param without reload
@@ -1237,12 +1277,16 @@ document.querySelectorAll('.btn-primary[formaction*="generate"]').forEach(functi
     btn.addEventListener('click', function() { btn.classList.add('loading'); });
 });
 
-// ── Slider fill positions ──
+// ── Slider fill positions (NaN-safe) ──
 document.querySelectorAll('.slider-row input[type="range"]').forEach(function(r) {
-    r.style.setProperty('--val', ((r.value - r.min) / (r.max - r.min) * 100) + '%');
+    var val = parseFloat(r.value);
+    var min = parseFloat(r.min) || 1;
+    var max = parseFloat(r.max) || 10;
+    var pct = isNaN(val) ? 50 : ((val - min) / (max - min) * 100);
+    r.style.setProperty('--val', pct + '%');
 });
 
-// ── Tooltips keyboard-accessible ──
+// ── Tooltips keyboard-accessible + edge-aware repositioning ──
 document.querySelectorAll('.tip-wrap').forEach(function(wrap) {
     wrap.setAttribute('tabindex', '0');
     wrap.setAttribute('role', 'button');
@@ -1253,11 +1297,44 @@ document.querySelectorAll('.tip-wrap').forEach(function(wrap) {
         tip.setAttribute('role', 'tooltip');
         wrap.setAttribute('aria-describedby', id);
     }
+    function repositionTip() {
+        if (!tip) return;
+        var rect = wrap.getBoundingClientRect();
+        var center = rect.left + rect.width / 2;
+        var vw = window.innerWidth;
+        tip.style.removeProperty('left');
+        tip.style.removeProperty('right');
+        tip.style.removeProperty('transform');
+        if (center < 130) {
+            tip.style.left = '0';
+            tip.style.transform = 'none';
+        } else if (center > vw - 130) {
+            tip.style.right = '0';
+            tip.style.left = 'auto';
+            tip.style.transform = 'none';
+        } else {
+            tip.style.left = '50%';
+            tip.style.transform = 'translateX(-50%)';
+        }
+    }
+    wrap.addEventListener('mouseenter', repositionTip);
+    wrap.addEventListener('focus', repositionTip);
+    wrap.addEventListener('focusin', repositionTip);
 });
 
 // ── Auto-scroll chat thread ──
 var chatThread = document.getElementById('chat-thread');
 if (chatThread) { chatThread.scrollTop = chatThread.scrollHeight; }
+
+// ── <details> open/close persistence ──
+['detail-method', 'detail-history'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    try { if (localStorage.getItem('maestro-' + id) === 'open') el.open = true; } catch(e) {}
+    el.addEventListener('toggle', function() {
+        try { localStorage.setItem('maestro-' + id, el.open ? 'open' : 'closed'); } catch(e) {}
+    });
+});
 
 // ── Fetch-based chat ──
 (function() {

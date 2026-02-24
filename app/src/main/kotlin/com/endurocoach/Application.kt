@@ -124,18 +124,79 @@ fun Application.module() {
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Privacy Policy — Maestro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@10..48,700;10..48,800&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
 <style>
-    body { font-family: 'Inter', -apple-system, sans-serif; background: #030408; color: #F0F4FA; max-width: 680px; margin: 0 auto; padding: 40px 20px; line-height: 1.75; }
-    h1 { font-size: 28px; margin-bottom: 8px; }
-    h2 { font-size: 18px; margin-top: 28px; margin-bottom: 8px; color: #C8D6F0; }
-    p { font-size: 14px; color: #9EAEC6; }
-    a { color: #C8D6F0; }
-    .back { display: inline-block; margin-top: 32px; color: #C8D6F0; text-decoration: none; font-size: 13px; }
+    :root {
+        --bg: #13181F;
+        --surface: #1E2535;
+        --line-soft: #2B3652;
+        --text: #EDF0F7;
+        --text-soft: #A8B8CC;
+        --text-muted: #6E83A0;
+        --violet: #9B91FF;
+        --max-w: 680px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+        font-family: 'IBM Plex Sans', sans-serif;
+        background:
+            radial-gradient(860px 480px at 108% -8%, rgba(63,108,160,.14), transparent 60%),
+            linear-gradient(180deg, #161D2B 0%, var(--bg) 100%);
+        color: var(--text);
+        min-height: 100vh;
+        line-height: 1.7;
+    }
+    .legal-topbar {
+        max-width: var(--max-w);
+        margin: 20px auto 0;
+        padding: 0 20px;
+    }
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--text-muted);
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 500;
+        transition: color .15s ease;
+    }
+    .back-link:hover { color: var(--text-soft); }
+    .legal-body {
+        max-width: var(--max-w);
+        margin: 32px auto 80px;
+        padding: 0 20px;
+    }
+    h1 {
+        font-family: 'Bricolage Grotesque', sans-serif;
+        font-size: 32px;
+        font-weight: 800;
+        letter-spacing: -.02em;
+        margin-bottom: 6px;
+    }
+    .effective { color: var(--text-muted); font-size: 13px; margin-bottom: 36px; }
+    h2 {
+        font-family: 'Bricolage Grotesque', sans-serif;
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--text-soft);
+        margin-top: 32px;
+        margin-bottom: 8px;
+        padding-bottom: 7px;
+        border-bottom: 1px solid var(--line-soft);
+    }
+    p { font-size: 14px; color: var(--text-soft); margin-top: 8px; }
+    a { color: var(--violet); text-decoration: none; }
+    a:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
+<div class="legal-topbar"><a class="back-link" href="/">&larr; Back to Maestro</a></div>
+<div class="legal-body">
 <h1>Privacy Policy</h1>
-<p><strong>Effective date:</strong> February 2026</p>
+<p class="effective">Effective date: February 2026</p>
 
 <h2>What data we access</h2>
 <p>When you connect your Strava account, Maestro requests read-only access to your activity data (distance, duration, heart rate) from the last 45 days. We access your athlete profile name solely for display purposes.</p>
@@ -154,8 +215,7 @@ fun Application.module() {
 
 <h2>Contact</h2>
 <p>For privacy questions, open an issue on the <a href="https://github.com/manol-dimitrov/strava-data-analyser">project repository</a>.</p>
-
-<a class="back" href="/">&larr; Back to dashboard</a>
+</div>
 </body>
 </html>
 """.trimIndent()
@@ -170,18 +230,79 @@ fun Application.module() {
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Terms of Service — Maestro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@10..48,700;10..48,800&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
 <style>
-    body { font-family: 'Inter', -apple-system, sans-serif; background: #030408; color: #F0F4FA; max-width: 680px; margin: 0 auto; padding: 40px 20px; line-height: 1.75; }
-    h1 { font-size: 28px; margin-bottom: 8px; }
-    h2 { font-size: 18px; margin-top: 28px; margin-bottom: 8px; color: #C8D6F0; }
-    p { font-size: 14px; color: #9EAEC6; }
-    a { color: #C8D6F0; }
-    .back { display: inline-block; margin-top: 32px; color: #C8D6F0; text-decoration: none; font-size: 13px; }
+    :root {
+        --bg: #13181F;
+        --surface: #1E2535;
+        --line-soft: #2B3652;
+        --text: #EDF0F7;
+        --text-soft: #A8B8CC;
+        --text-muted: #6E83A0;
+        --violet: #9B91FF;
+        --max-w: 680px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+        font-family: 'IBM Plex Sans', sans-serif;
+        background:
+            radial-gradient(860px 480px at 108% -8%, rgba(63,108,160,.14), transparent 60%),
+            linear-gradient(180deg, #161D2B 0%, var(--bg) 100%);
+        color: var(--text);
+        min-height: 100vh;
+        line-height: 1.7;
+    }
+    .legal-topbar {
+        max-width: var(--max-w);
+        margin: 20px auto 0;
+        padding: 0 20px;
+    }
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--text-muted);
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 500;
+        transition: color .15s ease;
+    }
+    .back-link:hover { color: var(--text-soft); }
+    .legal-body {
+        max-width: var(--max-w);
+        margin: 32px auto 80px;
+        padding: 0 20px;
+    }
+    h1 {
+        font-family: 'Bricolage Grotesque', sans-serif;
+        font-size: 32px;
+        font-weight: 800;
+        letter-spacing: -.02em;
+        margin-bottom: 6px;
+    }
+    .effective { color: var(--text-muted); font-size: 13px; margin-bottom: 36px; }
+    h2 {
+        font-family: 'Bricolage Grotesque', sans-serif;
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--text-soft);
+        margin-top: 32px;
+        margin-bottom: 8px;
+        padding-bottom: 7px;
+        border-bottom: 1px solid var(--line-soft);
+    }
+    p { font-size: 14px; color: var(--text-soft); margin-top: 8px; }
+    a { color: var(--violet); text-decoration: none; }
+    a:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
+<div class="legal-topbar"><a class="back-link" href="/">&larr; Back to Maestro</a></div>
+<div class="legal-body">
 <h1>Terms of Service</h1>
-<p><strong>Effective date:</strong> February 2026</p>
+<p class="effective">Effective date: February 2026</p>
 
 <h2>Service description</h2>
 <p>Maestro is a non-commercial, open-source AI endurance coaching tool. It analyses training data from Strava and generates workout prescriptions using the Banister impulse-response model and AI language models.</p>
@@ -197,8 +318,7 @@ fun Application.module() {
 
 <h2>Intellectual property</h2>
 <p>Strava and the Strava logo are trademarks of Strava, Inc. Maestro is not affiliated with or endorsed by Strava.</p>
-
-<a class="back" href="/">&larr; Back to dashboard</a>
+</div>
 </body>
 </html>
 """.trimIndent()

@@ -288,11 +288,11 @@ fun Route.installDashboardRoutes(dependencies: DashboardDependencies) {
 
         val nextStep = when (action) {
             "back" -> (current.onboarding.step - 1).coerceAtLeast(1)
-            "finish" -> 3
+            "finish", "skip" -> 3
             else -> (current.onboarding.step + 1).coerceAtMost(3)
         }
 
-        val completed = action == "finish"
+        val completed = action == "finish" || action == "skip"
         session.dashboardState.updateOnboarding(
             current.onboarding.copy(
                 step = nextStep,
@@ -679,6 +679,9 @@ private fun renderOnboarding(
                 $backBtn
                 $nextBtn
             </div>
+            <div class="onb-skip-wrap">
+                <button class="onb-skip-link" type="submit" name="action" value="skip">Skip setup and use defaults</button>
+            </div>
         </form>
     </div>
 </div>
@@ -821,7 +824,14 @@ private fun renderDashboard(
     // Topbar-inline strava status (no wrapping div — rendered inside .topbar-right)
     val stravaBar = if (stravaConnected) {
         val statusText = if (source == "strava") "Cardio activities synced" else "Connected — no recent activities"
-        """<span class="strava-status"><span class="dot connected"></span>$statusText</span><a class="btn-disconnect" href="/api/strava/disconnect">Disconnect</a>"""
+        val tsbColor = when {
+            tsb > 10  -> "#2ED3A2"
+            tsb > 0   -> "#FFBD5B"
+            tsb > -20 -> "#9B91FF"
+            else      -> "#FF6C84"
+        }
+        val tsbLabel = if (tsb >= 0) "+${"%.0f".format(tsb)}" else "${"%.0f".format(tsb)}"
+        """<span class="tsb-topbar-pill" style="color:$tsbColor">TSB $tsbLabel</span><span class="strava-status"><span class="dot connected"></span>$statusText</span><a class="btn-disconnect" href="/api/strava/disconnect">Disconnect</a>"""
     } else if (stravaAuthUrl != null) {
         """<span class="strava-status"><span class="dot disconnected"></span>Not connected</span><a class="btn-connect" href="${escapeHtml(stravaAuthUrl)}"><img src="/assets/strava/btn_strava_connect_with_orange.svg" alt="Connect with Strava" /></a>"""
     } else {
@@ -1038,8 +1048,8 @@ private fun renderLoadChart(snapshot: LoadSnapshot): String {
         """<text x="${fmt2(x)}" y="${fmt2(h - 4)}" text-anchor="middle" fill="#9078C0" font-size="10">$dateStr</text>"""
     }.joinToString("\n    ")
 
-    val ctlLine = polyline(series.map { it.ctl }, "#1a73e8", 2.2)
-    val atlLine = polyline(series.map { it.atl }, "#fc4c02", 2.2)
+    val ctlLine = polyline(series.map { it.ctl }, "#9B91FF", 2.2)
+    val atlLine = polyline(series.map { it.atl }, "#F07055", 2.2)
     val tsbLine = polyline(series.map { it.tsb }, "#2ED3A2", 1.5, dashed = true)
 
     return """
@@ -1202,5 +1212,5 @@ private fun renderWorkoutHistory(history: List<WorkoutHistoryEntry>): String {
 </div>"""
     }
 
-    return """<div class="history-list">$items</div>"""
+    return """<div class="history-list">$items</div><p class="history-ephemeral-note">History is kept for this session only and clears on server restart.</p>"""
 }
