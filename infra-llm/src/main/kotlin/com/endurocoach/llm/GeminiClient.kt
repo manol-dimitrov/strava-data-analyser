@@ -99,6 +99,7 @@ You are an elite-level endurance running coach with deep expertise in periodisat
 - Seiler's polarised training model (80/20 intensity distribution)
 - Foster's training monotony for load variation
 - Mujika & Busso's taper and peaking research
+- Skiba & Billat lactate threshold models: LT1 (first lactate threshold / aerobic threshold, ~75% HRR) is the all-day aerobic ceiling — easy runs should stay below it; LT2 (lactate/anaerobic threshold, ~87% HRR) is the comfortably-hard ceiling for tempo and threshold work — interval efforts target this zone or above
 
 Behavioural rules:
 - Be direct, precise, and authoritative. No filler praise, hedging, or sycophantic tone.
@@ -109,6 +110,15 @@ Behavioural rules:
 - If the athlete genuinely needs rest, say so plainly — but distinguish between productive fatigue (functional overreaching) and problematic fatigue (non-functional overreaching).
 - Treat the athlete as a serious, coachable adult who wants honest, actionable guidance.
 - Consider the Norwegian method / Maffetone principles for easy-day prescriptions.
+
+Pace range requirements (MANDATORY):
+- Every segment (warmup, main_set, cooldown) MUST include a pace range in the format M:SS–M:SS/km.
+- Anchor paces to the athlete's provided pace profile when available:
+    - Easy / recovery segments → below LT1 pace (easy pace zone ± 10 s/km)
+    - Tempo / threshold segments → LT1–LT2 pace zone (tempo pace ± 5 s/km)
+    - Interval / VO2max segments → at or faster than LT2 pace (vo2max pace ± 5 s/km)
+- If no pace profile is provided, derive evidence-based zone estimates from the athlete's sport focus and race distance target.
+- Adjust paces relative to the race focus: marathon runners need more LT1-zone volume; 5 km runners need more LT2/VO2max work.
 
 Output contract:
 - Return exactly one JSON object with these four keys and no others: warmup, main_set, cooldown, coach_reasoning.
@@ -138,11 +148,63 @@ Training load state:
 - 10-day Spike Ratio: ${"%.2f".format(request.spike10)} — ratio of 10-day rolling load to the full-window daily average baseline; above 1.3 warrants monitoring, above 1.5 is a concern even if standard ACWR looks safe
 - 10-day Strain (Foster): ${"%.0f".format(request.strain10)} — accumulated load × monotony over 10 days; above 700 is high and suggests the athlete is carrying both volume and insufficient variation
 
+${buildPaceProfileBlock(request)}
+
+${buildRaceFocusBlock(request.checkIn.raceDistance)}
+
 Prescription requirements:
-- warmup: Specific warm-up protocol with exact durations, drills, and progressive effort cues (RPE, pace zones, or HR zones). Include dynamic mobility if appropriate.
-- main_set: Concrete session blocks with precise intervals, recoveries, target intensities, and total volume. Specify pace guidance, effort zones, or HR targets. If the session should be easy or a rest day, prescribe accordingly. For easy days, consider Maffetone-style aerobic running or Norwegian easy pace.
-- cooldown: Specific cool-down with duration, effort, and any recommended post-session work (strides, stretching protocol).
-- coach_reasoning: Justify this exact session by referencing the athlete's TSB, ACWR, CTL trend, monotony, subjective readiness, and coaching philosophy. State which physiological adaptation this session targets. If ACWR is in the sweet spot, say so — don't look for problems that aren't there. If the athlete is in a productive build phase with negative TSB but safe ACWR, frame it positively.
+- warmup: Specific warm-up protocol with exact durations, drills, and progressive effort cues. Include pace range (M:SS–M:SS/km). Include dynamic mobility if appropriate.
+- main_set: Concrete session blocks with precise intervals, recoveries, target intensities, total volume, and pace ranges (M:SS–M:SS/km) for every effort anchored to the athlete's pace zones above. If the session should be easy or a rest day, prescribe accordingly. For easy days, consider Maffetone-style aerobic running at or below LT1 pace.
+- cooldown: Specific cool-down with duration, effort, pace range (M:SS–M:SS/km), and any recommended post-session work (strides, stretching protocol).
+- coach_reasoning: Justify this exact session by referencing the athlete's TSB, ACWR, CTL trend, monotony, subjective readiness, coaching philosophy, and race focus. State which physiological adaptation this session targets and how the prescribed paces align with LT1/LT2 zones. If ACWR is in the sweet spot, say so — don't look for problems that aren't there.
 """.trimIndent()
+    }
+
+    private fun buildPaceProfileBlock(request: WorkoutRequest): String {
+        val profile = request.recentPaceProfile
+            ?: return """Athlete Pace Profile (last 14 days):
+- No reliable pace data available. Derive evidence-based zone estimates for the stated race focus."""
+
+        fun Int.toMmSs(): String {
+            val m = this / 60
+            val s = this % 60
+            return "$m:%02d".format(s)
+        }
+
+        val easyLine   = profile.easyPaceSecPerKm?.let {
+            val lo = (it - 10).toMmSs(); val hi = (it + 10).toMmSs()
+            "Easy (below LT1): $lo–$hi/km"
+        } ?: "Easy (below LT1): insufficient data"
+
+        val tempoLine  = profile.tempoPaceSecPerKm?.let {
+            val lo = (it - 5).toMmSs(); val hi = (it + 5).toMmSs()
+            "Tempo (LT1–LT2): $lo–$hi/km"
+        } ?: "Tempo (LT1–LT2): insufficient data"
+
+        val vo2maxLine = profile.vo2maxPaceSecPerKm?.let {
+            val lo = (it - 5).toMmSs(); val hi = (it + 5).toMmSs()
+            "VO2max (above LT2): $lo–$hi/km"
+        } ?: if (profile.fallbackUsed) "VO2max (above LT2): not available (HR data absent)" else "VO2max (above LT2): no recent high-intensity runs to reference"
+
+        val fallbackNote = if (profile.fallbackUsed)
+            " (Note: HR data was absent — zones estimated via pace-median split; treat with moderate confidence.)"
+        else ""
+
+        return """Athlete Pace Profile (last 14 days, ${profile.runCount} runs$fallbackNote):
+- $easyLine
+- $tempoLine
+- $vo2maxLine"""
+    }
+
+    private fun buildRaceFocusBlock(raceDistance: String): String {
+        val (label, guidance) = when (raceDistance) {
+            "5km"           -> "5 km" to "Emphasise VO2max development and speed. Prescribe short, high-intensity intervals (e.g. 200–400 m reps) at or above LT2 pace. Easy volume is secondary to quality."
+            "10km"          -> "10 km" to "Balance LT2 threshold work with VO2max intervals. Sessions should mix tempo runs in the LT1–LT2 zone with occasional short VO2max efforts. Aerobic base supports both."
+            "half_marathon" -> "Half Marathon" to "Prioritise LT2 tempo work and extended threshold efforts (e.g. 20–40 min at LT2 pace). Maintain solid aerobic base with easy LT1-zone long runs."
+            "marathon"      -> "Marathon" to "Prioritise aerobic base and LT1-pace running. The majority of sessions (80%+) should be at or below LT1 pace. Include occasional marathon-pace efforts (between LT1 and LT2). Minimise vo2max stress outside sharpening phase."
+            else            -> "10 km" to "Balance LT2 threshold work with VO2max intervals."
+        }
+        return """Today's Race Focus: $label
+- $guidance"""
     }
 }

@@ -15,11 +15,25 @@ data class Activity(
     val movingMinutes: Double = durationMinutes  // Moving time; defaults to elapsed time
 )
 
+/**
+ * Pace zones derived from recent Strava runs.
+ * LT1 = 75% HRR (aerobic threshold), LT2 = 87% HRR (lactate threshold).
+ * [fallbackUsed] is true when HR data was insufficient and a pace-median split was used instead.
+ */
+data class RecentPaceProfile(
+    val easyPaceSecPerKm: Int?,        // avg pace of runs with avgHR < LT1
+    val tempoPaceSecPerKm: Int?,       // avg pace of runs with avgHR in [LT1, LT2)
+    val vo2maxPaceSecPerKm: Int?,      // avg pace of runs with avgHR >= LT2 (null when HR fallback used)
+    val runCount: Int,
+    val fallbackUsed: Boolean          // true = no HR data; pace-median split into easy/tempo only
+)
+
 data class DailyCheckIn(
     val legFeeling: Int,
     val mentalReadiness: Int,
     val timeAvailableMinutes: Int,
-    val coachingPhilosophy: String
+    val coachingPhilosophy: String,
+    val raceDistance: String = "10km"  // "5km", "10km", "half_marathon", "marathon"
 )
 
 data class WorkoutRequest(
@@ -32,7 +46,8 @@ data class WorkoutRequest(
     val monotony: Double,
     val ctlRampRate: Double,
     val spike10: Double = 1.0,
-    val strain10: Double = 0.0
+    val strain10: Double = 0.0,
+    val recentPaceProfile: RecentPaceProfile? = null
 )
 
 data class WorkoutPlan(

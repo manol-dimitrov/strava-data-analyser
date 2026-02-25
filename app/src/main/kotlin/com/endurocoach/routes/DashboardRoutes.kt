@@ -17,6 +17,7 @@ import com.endurocoach.session.SESSION_MAX_AGE
 import com.endurocoach.session.SessionRegistry
 import com.endurocoach.strava.CachedActivityRepository
 import com.endurocoach.metrics.BanisterTrimpCalculator
+import com.endurocoach.metrics.RecentPaceCalculator
 import io.ktor.http.ContentType
 import io.ktor.server.request.receiveParameters
 import io.ktor.server.response.respond
@@ -33,7 +34,8 @@ data class DashboardState(
         legFeeling = 6,
         mentalReadiness = 6,
         timeAvailableMinutes = 60,
-        coachingPhilosophy = "balanced"
+        coachingPhilosophy = "balanced",
+        raceDistance = "10km"
     ),
     val maxHr: Int = 190,
     val restingHr: Int = 50,
@@ -341,11 +343,17 @@ fun Route.installDashboardRoutes(dependencies: DashboardDependencies) {
         session.dashboardState.updateCheckIn(parsed)
         session.dashboardState.updateHeartRateProfile(maxHr, restingHr)
 
-        val (source, snapshot, _) = dependencies.loadProvider(session.activityRepository, maxHr, restingHr)
+        val (source, snapshot, activities) = dependencies.loadProvider(session.activityRepository, maxHr, restingHr)
         val state = session.dashboardState.read()
         val profileContext = buildOnboardingProfileContext(state.onboarding)
         val basePhilosophy = dependencies.philosophyRulePacks[parsed.coachingPhilosophy]
             ?: dependencies.philosophyRulePacks.getValue("balanced")
+
+        val paceProfile = RecentPaceCalculator.calculate(
+            activities = activities,
+            maxHr = maxHr,
+            restingHr = restingHr
+        )
 
         val request = WorkoutRequest(
             checkIn = parsed.copy(
@@ -359,7 +367,8 @@ fun Route.installDashboardRoutes(dependencies: DashboardDependencies) {
             monotony = snapshot.monotony,
             ctlRampRate = snapshot.ctlRampRate,
             spike10 = snapshot.spike10,
-            strain10 = snapshot.strain10
+            strain10 = snapshot.strain10,
+            recentPaceProfile = paceProfile
         )
 
         runCatching { dependencies.llmClient.generateWorkoutPlan(request) }
@@ -508,11 +517,16 @@ private fun parseCheckIn(
         ?.takeIf { philosophyRulePacks.containsKey(it) }
         ?: "balanced"
 
+    val allowedDistances = setOf("5km", "10km", "half_marathon", "marathon")
+    val raceDistance = params["raceDistance"]
+        ?.takeIf { it in allowedDistances } ?: "10km"
+
     return DailyCheckIn(
         legFeeling = params["legFeeling"]?.toIntOrNull()?.coerceIn(1, 10) ?: 6,
         mentalReadiness = params["mentalReadiness"]?.toIntOrNull()?.coerceIn(1, 10) ?: 6,
         timeAvailableMinutes = params["timeAvailableMinutes"]?.toIntOrNull()?.coerceIn(15, 240) ?: 60,
-        coachingPhilosophy = selected
+        coachingPhilosophy = selected,
+        raceDistance = raceDistance
     )
 }
 
@@ -709,6 +723,16 @@ private fun renderDashboard(
     val options = philosophyRulePacks.keys.joinToString("\n") { key ->
         val selected = if (state.checkIn.coachingPhilosophy == key) "selected" else ""
         "<option value=\"${escapeHtml(key)}\" $selected>${escapeHtml(key.replaceFirstChar(Char::uppercaseChar))}</option>"
+    }
+
+    val raceDistanceOptions = listOf(
+        "5km" to "5 km",
+        "10km" to "10 km",
+        "half_marathon" to "Half Marathon",
+        "marathon" to "Marathon"
+    ).joinToString("\n") { (value, label) ->
+        val selected = if (state.checkIn.raceDistance == value) "selected" else ""
+        "<option value=\"$value\" $selected>$label</option>"
     }
 
     val workoutCard = state.latestWorkout?.let {
@@ -980,6 +1004,7 @@ private fun renderDashboard(
         .replace("{{maxHr}}", state.maxHr.toString())
         .replace("{{restingHr}}", state.restingHr.toString())
         .replace("{{philosophyOptions}}", options)
+        .replace("{{raceDistanceOptions}}", raceDistanceOptions)
         .replace("{{workoutCard}}", workoutCard)
         .replace("{{workoutHistory}}", workoutHistory)
         .replace("{{chatThread}}", chatThread)
