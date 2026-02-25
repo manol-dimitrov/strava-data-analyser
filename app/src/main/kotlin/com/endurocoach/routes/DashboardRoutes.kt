@@ -735,6 +735,17 @@ private fun renderDashboard(
         "<option value=\"$value\" $selected>$label</option>"
     }
 
+    // Hide the goal selector when the athlete already declared a target event during onboarding.
+    // A hidden input preserves the value so the form still submits it correctly.
+    val raceDistanceBlock = if (state.onboarding.targetEventName.isNotBlank()) {
+        "<input type=\"hidden\" name=\"raceDistance\" value=\"${escapeHtml(state.checkIn.raceDistance)}\" />"
+    } else {
+        """<div class="form-group">
+                    <label>What are you training for?</label>
+                    <select name="raceDistance">$raceDistanceOptions</select>
+                </div>"""
+    }
+
     val workoutCard = state.latestWorkout?.let {
         """
 <div class="workout-section"><div class="ws-header"><span class="ws-icon">&#x1F525;</span><span class="ws-label">Warm-up</span></div><p>${escapeHtml(it.warmup)}</p></div>
@@ -767,12 +778,12 @@ private fun renderDashboard(
         else -> "Overreaching"
     }
     val tsbExplain = when {
-        tsb > 25 -> "Highly positive \u2014 extended freshness may indicate insufficient training stimulus. Fitness (CTL) will erode if load isn\u2019t restored."
-        tsb > 10 -> "Positive \u2014 classic taper zone. Fatigue has dissipated while fitness is retained. Ideal for racing or a quality breakthrough session."
-        tsb > 0 -> "Mildly positive \u2014 fresh with fitness intact. A good window for moderate-to-hard work or a progressive long run."
-        tsb > -10 -> "Near zero \u2014 the productive training sweet spot (Mujika & Busso). Load and recovery are balanced. This is where consistent adaptation happens."
-        tsb > -25 -> "Moderately negative \u2014 normal during a build block. Functional overreaching is expected here. Monitor subjective readiness and keep recovery quality high."
-        else -> "Deeply negative \u2014 sustained load at this level risks non-functional overreaching. Consider a planned unload week if this persists beyond 7\u201310 days."
+        tsb > 25  -> "You've been very fresh for a while \u2014 if you're not peaking for a race, your fitness may slowly be slipping. Time to add some load back in."
+        tsb > 10  -> "You're fresh and fit \u2014 perfect timing for a race or a big quality session. Make the most of it."
+        tsb > 0   -> "Feeling good with solid fitness underneath. A great day for a quality effort or a strong long run."
+        tsb > -10 -> "You're carrying a normal training load \u2014 exactly where you want to be when building consistently. This is where improvement happens."
+        tsb > -25 -> "You're accumulating fatigue from a solid training block. That's normal and productive \u2014 just make sure you're sleeping and eating well."
+        else      -> "Accumulated fatigue is getting heavy. If this has been going on for a week or more, an easier week will help more than it hurts."
     }
 
     // CTL contextual interpretation
@@ -790,10 +801,10 @@ private fun renderDashboard(
         else -> "Developing"
     }
     val ctlExplain = when {
-        ctl > 60 -> "Solid chronic fitness base. Your body has adapted to sustained training loads. Maintain with consistent stimulus and periodised recovery."
-        ctl > 30 -> "Moderate fitness level with room to grow. Progressive overload over the coming weeks will push this higher. Consistency is key."
-        ctl > 15 -> "Fitness is building. Early adaptation phase \u2014 stay patient, keep sessions regular, and prioritise aerobic base work."
-        else -> "Low chronic load \u2014 either early in a training block or returning from a break. Build gradually with easy volume."
+        ctl > 60 -> "Strong fitness base. Your body is well-conditioned to handle sustained training. Keep the consistency going."
+        ctl > 30 -> "Good fitness with plenty of room to grow. Keep stacking consistent weeks and you'll see this number climb."
+        ctl > 15 -> "Your fitness is on the rise. Stay patient and stick to the plan \u2014 this is the base-building phase."
+        else     -> "Fitness is still developing \u2014 either early in a new block or coming back from time off. Build gently and let the load accumulate."
     }
 
     // ATL contextual interpretation (relative to CTL — ACWR-informed)
@@ -811,10 +822,10 @@ private fun renderDashboard(
         else -> "Low"
     }
     val atlExplain = when {
-        acwr > 1.5 -> "Acute load is spiking well above chronic fitness (ACWR > 1.5). Gabbett\u2019s research links this zone to elevated injury risk. Scale back intensity or volume."
-        acwr > 1.3 -> "Acute load moderately exceeds chronic fitness (ACWR ${"%.2f".format(acwr)}). Acceptable during a planned build block, but don\u2019t sustain this for more than 1\u20132 weeks."
-        acwr > 0.8 -> "Acute and chronic loads are well-balanced (ACWR ${"%.2f".format(acwr)}). This is Gabbett\u2019s \u2018sweet spot\u2019 (0.8\u20131.3) \u2014 optimal for progressive adaptation with managed injury risk."
-        else -> "Low recent load relative to fitness (ACWR ${"%.2f".format(acwr)}). Recovery or taper phase. Freshness is building, but extended underloading will reduce fitness."
+        acwr > 1.5 -> "Your recent training has jumped well above what your body is used to. Back off a little to keep injury risk in check."
+        acwr > 1.3 -> "You're training harder than your recent average \u2014 fine for a build block, but don't let it run for more than a week or two without a lighter day."
+        acwr > 0.8 -> "Recent training is nicely balanced with your fitness base. You're working hard enough to improve without overdoing it."
+        else       -> "You're doing less than your body is used to \u2014 fine if you're recovering, but don't stay here too long or fitness will drift."
     }
 
     // Volume contextual interpretation
@@ -832,11 +843,11 @@ private fun renderDashboard(
         else -> "Minimal"
     }
     val volExplain = when {
-        vol > 600 -> "Over 10 hours in 7 days \u2014 heavy training block. Ensure recovery quality matches the volume."
-        vol > 420 -> "7+ hours in 7 days \u2014 solid volume. Watch for compounding fatigue across the week."
-        vol > 240 -> "4\u20137 hours in 7 days \u2014 moderate volume with room to push if readiness supports it."
-        vol > 120 -> "2\u20134 hours in 7 days \u2014 lighter week. Good for recovery or early base-building."
-        else -> "Under 2 hours \u2014 very light. Either planned recovery or returning from a break."
+        vol > 600 -> "A big week \u2014 over 10 hours on your feet. Make sure sleep and food are keeping up with the effort."
+        vol > 420 -> "Solid 7+ hour week. Good training load \u2014 keep an eye on how your legs feel day to day."
+        vol > 240 -> "A decent 4\u20137 hours this week. There's room to build if your body is responding well."
+        vol > 120 -> "A lighter 2\u20134 hour week. Good for recovery or easing back into things."
+        else      -> "Under 2 hours \u2014 very light. Whether planned or not, easy weeks are part of the process."
     }
 
     val sourceBadge = if (source == "strava") {
@@ -884,10 +895,10 @@ private fun renderDashboard(
         else -> "Underloading"
     }
     val acwrExplain = when {
-        acwr > 1.5 -> "ACWR > 1.5 \u2014 acute load is spiking relative to your chronic base. Gabbett\u2019s research shows this range significantly elevates injury risk. Reduce load."
-        acwr > 1.3 -> "ACWR in the upper range (1.3\u20131.5). Manageable during a planned overload, but don\u2019t sustain for more than 10 days without an unload."
-        acwr > 0.8 -> "ACWR in the optimal zone (0.8\u20131.3). Training stimulus is progressive relative to your fitness base. This is where the best adaptation-to-risk ratio lives."
-        else -> "ACWR below 0.8 \u2014 current load is well below your established fitness. Good for planned recovery; extended periods here will cause detraining."
+        acwr > 1.5 -> "Your recent training load has spiked well above your normal level. Dial back the intensity or volume \u2014 the injury risk is real at this level."
+        acwr > 1.3 -> "You're pushing a bit harder than your baseline, which is fine during a planned build. Don't sustain it for more than 10 days without backing off."
+        acwr > 0.8 -> "Training load and fitness are well-matched. You're in a productive groove \u2014 pushing enough to improve without overdoing it."
+        else       -> "Your recent training is well below your usual level. That's fine for a recovery week, but don't stay here too long."
     }
 
     // Monotony badge (Foster 1998)
@@ -904,9 +915,9 @@ private fun renderDashboard(
         else -> "Good variety"
     }
     val monoExplain = when {
-        mono > 2.0 -> "Training monotony > 2.0 (Foster 1998). Daily loads are too uniform — polarise your training with hard/easy variation to reduce injury and illness risk."
-        mono > 1.5 -> "Moderate monotony. Some variation exists, but consider adding more contrast between hard and easy days for better adaptation."
-        else -> "Good training variation. Your hard and easy days are well-differentiated, which supports recovery and reduces overuse risk."
+        mono > 2.0 -> "Your training days are all looking very similar. Mix it up more \u2014 alternate hard and easy days to lower the risk of overuse injury and burnout."
+        mono > 1.5 -> "There's some variety in your week, but you could get more from it. Try making your easy days a bit easier and your hard days a bit harder."
+        else       -> "Good mix of hard and easy days. This kind of variety helps your body recover and adapt week on week."
     }
 
     // 10-day spike ratio badge
@@ -924,10 +935,10 @@ private fun renderDashboard(
         else -> "Low"
     }
     val spike10Explain = when {
-        spike10 > 1.5 -> "10-day load is significantly above your daily average (×${"%.2f".format(spike10)}). Short-term spikes above 1.5× baseline elevate injury risk even when ACWR looks safe."
-        spike10 > 1.3 -> "10-day load is moderately above baseline (×${"%.2f".format(spike10)}). Manageable during a planned build block but don't sustain for more than 1–2 weeks."
-        spike10 > 0.8 -> "10-day load is well-matched to your training baseline (×${"%.2f".format(spike10)}). Good progressive loading."
-        else -> "10-day load is below your typical baseline (×${"%.2f".format(spike10)}). Planned recovery or returning from a break."
+        spike10 > 1.5 -> "The last 10 days have been significantly heavier than your usual training level. Even if it doesn't feel that way, the load is building — plan some lighter days soon."
+        spike10 > 1.3 -> "You've been training above your usual level for the past 10 days. Fine for a build phase, but plan a lighter stretch before long."
+        spike10 > 0.8 -> "The last 10 days of training are right in line with your normal level. Consistent and sustainable."
+        else          -> "The last 10 days have been lighter than usual. Rest and recovery are part of the process."
     }
 
     // 10-day Foster strain badge
@@ -943,9 +954,9 @@ private fun renderDashboard(
         else -> "Low"
     }
     val strain10Explain = when {
-        strain10 > 700 -> "High 10-day strain (${"%.0f".format(strain10)}). Accumulated load combined with low variety is elevated. Prioritise hard/easy contrast and ensure sleep quality."
-        strain10 > 400 -> "Moderate 10-day strain (${"%.0f".format(strain10)}). Training is productive but watch for compounding fatigue if this persists."
-        else -> "Low strain (${"%.0f".format(strain10)}). Good hard/easy variation and manageable load over the recent 10 days."
+        strain10 > 700 -> "High strain over the last 10 days — heavy load combined with repetitive days. Your body needs more contrast between hard and easy sessions."
+        strain10 > 400 -> "Moderate strain — you're working hard and the training is productive. Keep an ear out for any signs of fatigue building up."
+        else           -> "Low strain — a good mix of effort levels and manageable load. Your body has room to absorb more training."
     }
 
     // Hero card supplementary vars
@@ -1004,7 +1015,7 @@ private fun renderDashboard(
         .replace("{{maxHr}}", state.maxHr.toString())
         .replace("{{restingHr}}", state.restingHr.toString())
         .replace("{{philosophyOptions}}", options)
-        .replace("{{raceDistanceOptions}}", raceDistanceOptions)
+        .replace("{{raceDistanceBlock}}", raceDistanceBlock)
         .replace("{{workoutCard}}", workoutCard)
         .replace("{{workoutHistory}}", workoutHistory)
         .replace("{{chatThread}}", chatThread)
