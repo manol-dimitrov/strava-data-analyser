@@ -816,10 +816,10 @@ private fun renderDashboard(
         else -> "Developing"
     }
     val ctlExplain = when {
-        ctl > 60 -> "Strong fitness base. Your body is well-conditioned to handle sustained training. Keep the consistency going."
-        ctl > 30 -> "Good fitness with plenty of room to grow. Keep stacking consistent weeks and you'll see this number climb."
-        ctl > 15 -> "Your fitness is on the rise. Stay patient and stick to the plan \u2014 this is the base-building phase."
-        else     -> "Fitness is still developing \u2014 either early in a new block or coming back from time off. Build gently and let the load accumulate."
+        ctl > 60 -> "Strong fitness base. Your body is well-conditioned to handle sustained training. Keep the consistency going.<span class=\"nudge\">Maintain rhythm \u2014 you can handle quality sessions without overreaching.</span>"
+        ctl > 30 -> "Good fitness with plenty of room to grow. Keep stacking consistent weeks and you'll see this number climb.<span class=\"nudge\">Stay patient and build week on week \u2014 consistency is king.</span>"
+        ctl > 15 -> "Your fitness is on the rise. Stay patient and stick to the plan \u2014 this is the base-building phase.<span class=\"nudge\">Focus on regular easy volume to lay the aerobic foundation.</span>"
+        else     -> "Fitness is still developing \u2014 either early in a new block or coming back from time off. Build gently and let the load accumulate.<span class=\"nudge\">Start with 3\u20134 easy sessions a week and increase gradually.</span>"
     }
 
     // ATL contextual interpretation (relative to CTL — ACWR-informed)
@@ -837,10 +837,10 @@ private fun renderDashboard(
         else -> "Low"
     }
     val atlExplain = when {
-        acwr > 1.5 -> "Your recent training has jumped well above what your body is used to. Back off a little to keep injury risk in check."
-        acwr > 1.3 -> "You're training harder than your recent average \u2014 fine for a build block, but don't let it run for more than a week or two without a lighter day."
-        acwr > 0.8 -> "Recent training is nicely balanced with your fitness base. You're working hard enough to improve without overdoing it."
-        else       -> "You're doing less than your body is used to \u2014 fine if you're recovering, but don't stay here too long or fitness will drift."
+        acwr > 1.5 -> "Your recent training has jumped well above what your body is used to. Back off a little to keep injury risk in check.<span class=\"nudge\">Skip the hard session today \u2014 an easy spin or rest day is the smart call.</span>"
+        acwr > 1.3 -> "You're training harder than your recent average \u2014 fine for a build block, but don't let it run for more than a week or two without a lighter day.<span class=\"nudge\">Watch how you feel tomorrow \u2014 back off if legs are heavy.</span>"
+        acwr > 0.8 -> "Recent training is nicely balanced with your fitness base. You're working hard enough to improve without overdoing it.<span class=\"nudge\">Good groove \u2014 keep the mix of hard and easy days going.</span>"
+        else       -> "You're doing less than your body is used to \u2014 fine if you're recovering, but don't stay here too long or fitness will drift.<span class=\"nudge\">If you're feeling good, there's room to add a session this week.</span>"
     }
 
     // Volume contextual interpretation
@@ -858,11 +858,11 @@ private fun renderDashboard(
         else -> "Minimal"
     }
     val volExplain = when {
-        vol > 600 -> "A big week \u2014 over 10 hours on your feet. Make sure sleep and food are keeping up with the effort."
-        vol > 420 -> "Solid 7+ hour week. Good training load \u2014 keep an eye on how your legs feel day to day."
-        vol > 240 -> "A decent 4\u20137 hours this week. There's room to build if your body is responding well."
-        vol > 120 -> "A lighter 2\u20134 hour week. Good for recovery or easing back into things."
-        else      -> "Under 2 hours \u2014 very light. Whether planned or not, easy weeks are part of the process."
+        vol > 600 -> "A big week \u2014 over 10 hours on your feet. Make sure sleep and food are keeping up with the effort.<span class=\"nudge\">Consider an easier couple of days to let your body absorb this block.</span>"
+        vol > 420 -> "Solid 7+ hour week. Good training load \u2014 keep an eye on how your legs feel day to day.<span class=\"nudge\">You're doing the work \u2014 stay consistent and listen to your body.</span>"
+        vol > 240 -> "A decent 4\u20137 hours this week. There's room to build if your body is responding well.<span class=\"nudge\">If legs are feeling fresh, you could add an extra easy session.</span>"
+        vol > 120 -> "A lighter 2\u20134 hour week. Good for recovery or easing back into things.<span class=\"nudge\">Perfect if it's a planned rest week. If not, try to get out the door tomorrow.</span>"
+        else      -> "Under 2 hours \u2014 very light. Whether planned or not, easy weeks are part of the process.<span class=\"nudge\">When you're ready, start back gently with short easy sessions.</span>"
     }
 
     val sourceBadge = if (source == "strava") {
@@ -910,10 +910,10 @@ private fun renderDashboard(
         else -> "Underloading"
     }
     val acwrExplain = when {
-        acwr > 1.5 -> "Your recent training load has spiked well above your normal level. Dial back the intensity or volume \u2014 the injury risk is real at this level."
-        acwr > 1.3 -> "You're pushing a bit harder than your baseline, which is fine during a planned build. Don't sustain it for more than 10 days without backing off."
-        acwr > 0.8 -> "Training load and fitness are well-matched. You're in a productive groove \u2014 pushing enough to improve without overdoing it."
-        else       -> "Your recent training is well below your usual level. That's fine for a recovery week, but don't stay here too long."
+        acwr > 1.5 -> "Your recent training load has spiked well above your normal level. Dial back the intensity or volume \u2014 the injury risk is real at this level.<span class=\"nudge\">Drop to easy sessions only for the next 2\u20133 days.</span>"
+        acwr > 1.3 -> "You're pushing a bit harder than your baseline, which is fine during a planned build. Don't sustain it for more than 10 days without backing off.<span class=\"nudge\">One more hard day is fine, then ease up.</span>"
+        acwr > 0.8 -> "Training load and fitness are well-matched. You're in a productive groove \u2014 pushing enough to improve without overdoing it.<span class=\"nudge\">Keep the balance \u2014 this is the sweet spot for adaptation.</span>"
+        else       -> "Your recent training is well below your usual level. That's fine for a recovery week, but don't stay here too long.<span class=\"nudge\">When you're ready, ramp back up gradually over 3\u20135 days.</span>"
     }
 
     // Monotony badge (Foster 1998)
@@ -930,9 +930,9 @@ private fun renderDashboard(
         else -> "Good variety"
     }
     val monoExplain = when {
-        mono > 2.0 -> "Your training days are all looking very similar. Mix it up more \u2014 alternate hard and easy days to lower the risk of overuse injury and burnout."
-        mono > 1.5 -> "There's some variety in your week, but you could get more from it. Try making your easy days a bit easier and your hard days a bit harder."
-        else       -> "Good mix of hard and easy days. This kind of variety helps your body recover and adapt week on week."
+        mono > 2.0 -> "Your training days are all looking very similar. Mix it up more \u2014 alternate hard and easy days to lower the risk of overuse injury and burnout.<span class=\"nudge\">Tomorrow, try the opposite \u2014 if today was hard, go very easy.</span>"
+        mono > 1.5 -> "There's some variety in your week, but you could get more from it. Try making your easy days a bit easier and your hard days a bit harder.<span class=\"nudge\">Add more contrast \u2014 a polarised approach helps adaptation.</span>"
+        else       -> "Good mix of hard and easy days. This kind of variety helps your body recover and adapt week on week.<span class=\"nudge\">Keep this up \u2014 variety is protective against overuse injuries.</span>"
     }
 
     // 10-day spike ratio badge
@@ -950,10 +950,10 @@ private fun renderDashboard(
         else -> "Low"
     }
     val spike10Explain = when {
-        spike10 > 1.5 -> "The last 10 days have been significantly heavier than your usual training level. Even if it doesn't feel that way, the load is building — plan some lighter days soon."
-        spike10 > 1.3 -> "You've been training above your usual level for the past 10 days. Fine for a build phase, but plan a lighter stretch before long."
-        spike10 > 0.8 -> "The last 10 days of training are right in line with your normal level. Consistent and sustainable."
-        else          -> "The last 10 days have been lighter than usual. Rest and recovery are part of the process."
+        spike10 > 1.5 -> "The last 10 days have been significantly heavier than your usual training level. Even if it doesn't feel that way, the load is building — plan some lighter days soon.<span class=\"nudge\">Schedule a lighter 2–3 days to let the body catch up.</span>"
+        spike10 > 1.3 -> "You've been training above your usual level for the past 10 days. Fine for a build phase, but plan a lighter stretch before long.<span class=\"nudge\">A brief dip in volume will consolidate recent gains.</span>"
+        spike10 > 0.8 -> "The last 10 days of training are right in line with your normal level. Consistent and sustainable.<span class=\"nudge\">Steady as she goes — no red flags here.</span>"
+        else          -> "The last 10 days have been lighter than usual. Rest and recovery are part of the process.<span class=\"nudge\">When energy returns, build back up incrementally.</span>"
     }
 
     // 10-day Foster strain badge
@@ -969,9 +969,9 @@ private fun renderDashboard(
         else -> "Low"
     }
     val strain10Explain = when {
-        strain10 > 700 -> "High strain over the last 10 days — heavy load combined with repetitive days. Your body needs more contrast between hard and easy sessions."
-        strain10 > 400 -> "Moderate strain — you're working hard and the training is productive. Keep an ear out for any signs of fatigue building up."
-        else           -> "Low strain — a good mix of effort levels and manageable load. Your body has room to absorb more training."
+        strain10 > 700 -> "High strain over the last 10 days — heavy load combined with repetitive days. Your body needs more contrast between hard and easy sessions.<span class=\"nudge\">Prioritise variety and an easier day or two before the next hard block.</span>"
+        strain10 > 400 -> "Moderate strain — you're working hard and the training is productive. Keep an ear out for any signs of fatigue building up.<span class=\"nudge\">Stay aware — moderate strain is fine if variety is holding up.</span>"
+        else           -> "Low strain — a good mix of effort levels and manageable load. Your body has room to absorb more training.<span class=\"nudge\">Room in the tank — you can push a bit harder if you're feeling good.</span>"
     }
 
     // Hero card supplementary vars
@@ -991,6 +991,85 @@ private fun renderDashboard(
     }
     val tsbHeroStatusBadge = "<div class=\"hero-status-badge $tsbBadgeClass\">$tsbBadgeLabel</div>"
 
+    // ── CTL Ramp Rate (fitness momentum) ──
+    val rampRate = snapshot.ctlRampRate
+    val rampBadgeClass = when {
+        rampRate > 7  -> "fatigued"
+        rampRate > 3  -> "neutral"
+        rampRate > 0  -> "fresh"
+        else          -> "neutral"
+    }
+    val rampBadgeLabel = when {
+        rampRate > 7  -> "Aggressive"
+        rampRate > 3  -> "Building"
+        rampRate > 0  -> "Rising"
+        else          -> "Declining"
+    }
+    val rampExplain = when {
+        rampRate > 7  -> "Fitness is climbing fast \u2014 above 7 points/week risks burnout. Consider easing back next week to let adaptations settle.<span class=\"nudge\">Slow the ramp \u2014 a consolidation week will protect long-term progress.</span>"
+        rampRate > 3  -> "Solid fitness momentum. You're building at a sustainable rate \u2014 this is the ideal growth corridor.<span class=\"nudge\">Keep going \u2014 this rate of progression is textbook.</span>"
+        rampRate > 0  -> "Fitness is trending up gently. Steady progress without forcing it.<span class=\"nudge\">Room to push a little more if energy and recovery are good.</span>"
+        rampRate > -3 -> "Fitness is broadly stable or edging down. A normal phase during recovery weeks.<span class=\"nudge\">If this wasn't planned, add a bit more volume this week.</span>"
+        else          -> "Fitness is declining \u2014 either a deliberate taper or an extended break. Time off can be productive if it was needed.<span class=\"nudge\">Start rebuilding with easy, consistent sessions.</span>"
+    }
+
+    // ── Trend arrows for CTL and ATL ──
+    val series = snapshot.series
+    val ctlDelta = if (series.size >= 8) series.last().ctl - series[series.size - 8].ctl else 0.0
+    val atlDelta = if (series.size >= 8) series.last().atl - series[series.size - 8].atl else 0.0
+    fun trendArrow(delta: Double): String = when {
+        delta > 1.0  -> "<span class=\"trend-arrow up\">\u2191</span>"
+        delta < -1.0 -> "<span class=\"trend-arrow down\">\u2193</span>"
+        else         -> "<span class=\"trend-arrow flat\">\u2192</span>"
+    }
+    val ctlTrend = trendArrow(ctlDelta)
+    val atlTrend = trendArrow(atlDelta)
+
+    // ── Range bar builder ──
+    // Each zone: Triple(proportionalWidth 0-1, cssColor, label)
+    fun buildRangeBar(value: Double, scaleMin: Double, scaleMax: Double, zones: List<Triple<Double, Double, String>>): String {
+        val range = scaleMax - scaleMin
+        if (range <= 0) return ""
+        val pct = ((value - scaleMin) / range).coerceIn(0.0, 1.0) * 100.0
+        val segments = zones.map { (start, end, color) ->
+            val w = ((end - start) / range * 100.0).coerceIn(0.0, 100.0)
+            "<span class=\"range-seg\" style=\"flex:0 0 ${"%.1f".format(w)}%;background:$color;\"></span>"
+        }.joinToString("")
+        return "<div class=\"range-bar\">$segments<span class=\"range-marker\" style=\"left:${"%.1f".format(pct)}%;\"></span></div>"
+    }
+
+    val ctlRangeBar = buildRangeBar(ctl, 0.0, 100.0, listOf(
+        Triple(0.0, 15.0, "#FF6C84"), Triple(15.0, 30.0, "#FFBD5B"),
+        Triple(30.0, 60.0, "#FFBD5B"), Triple(60.0, 80.0, "#2ED3A2"), Triple(80.0, 100.0, "#2ED3A2")
+    ))
+    val atlRangeBar = buildRangeBar(acwr, 0.0, 2.0, listOf(
+        Triple(0.0, 0.8, "#B2A6D8"), Triple(0.8, 1.3, "#2ED3A2"),
+        Triple(1.3, 1.5, "#FFBD5B"), Triple(1.5, 2.0, "#FF6C84")
+    ))
+    val acwrRangeBar = buildRangeBar(acwr, 0.0, 2.0, listOf(
+        Triple(0.0, 0.8, "#B2A6D8"), Triple(0.8, 1.3, "#2ED3A2"),
+        Triple(1.3, 1.5, "#FFBD5B"), Triple(1.5, 2.0, "#FF6C84")
+    ))
+    val rampRangeBar = buildRangeBar(rampRate, -5.0, 10.0, listOf(
+        Triple(-5.0, 0.0, "#B2A6D8"), Triple(0.0, 3.0, "#2ED3A2"),
+        Triple(3.0, 7.0, "#FFBD5B"), Triple(7.0, 10.0, "#FF6C84")
+    ))
+    val monoRangeBar = buildRangeBar(mono, 0.0, 3.0, listOf(
+        Triple(0.0, 1.5, "#2ED3A2"), Triple(1.5, 2.0, "#FFBD5B"),
+        Triple(2.0, 2.5, "#FF6C84"), Triple(2.5, 3.0, "#FF6C84")
+    ))
+    val volRangeBar = buildRangeBar(vol, 0.0, 720.0, listOf(
+        Triple(0.0, 120.0, "#2ED3A2"), Triple(120.0, 240.0, "#2ED3A2"),
+        Triple(240.0, 420.0, "#FFBD5B"), Triple(420.0, 600.0, "#FF6C84"), Triple(600.0, 720.0, "#FF6C84")
+    ))
+    val spike10RangeBar = buildRangeBar(spike10, 0.0, 2.0, listOf(
+        Triple(0.0, 0.8, "#B2A6D8"), Triple(0.8, 1.3, "#2ED3A2"),
+        Triple(1.3, 1.5, "#FFBD5B"), Triple(1.5, 2.0, "#FF6C84")
+    ))
+    val strain10RangeBar = buildRangeBar(strain10, 0.0, 1000.0, listOf(
+        Triple(0.0, 400.0, "#2ED3A2"), Triple(400.0, 700.0, "#FFBD5B"), Triple(700.0, 1000.0, "#FF6C84")
+    ))
+
     return template
         .replace("{{source}}", escapeHtml(source))
         .replace("{{ctl}}", format(snapshot.ctl))
@@ -1004,27 +1083,40 @@ private fun renderDashboard(
         .replace("{{tsbHeroStatusBadge}}", tsbHeroStatusBadge)
         .replace("{{workoutsStrip}}", workoutsStrip)
         .replace("{{ctlBadge}}", "<span class=\"badge $ctlBadgeClass\">$ctlBadgeLabel</span>")
-        .replace("{{ctlExplain}}", escapeHtml(ctlExplain))
+        .replace("{{ctlExplain}}", ctlExplain)
+        .replace("{{ctlTrend}}", ctlTrend)
+        .replace("{{ctlRangeBar}}", ctlRangeBar)
         .replace("{{atlBadge}}", "<span class=\"badge $atlBadgeClass\">$atlBadgeLabel</span>")
-        .replace("{{atlExplain}}", escapeHtml(atlExplain))
+        .replace("{{atlExplain}}", atlExplain)
+        .replace("{{atlTrend}}", atlTrend)
+        .replace("{{atlRangeBar}}", atlRangeBar)
         .replace("{{volumeBadge}}", "<span class=\"badge $volBadgeClass\">$volBadgeLabel</span>")
-        .replace("{{volumeExplain}}", escapeHtml(volExplain))
+        .replace("{{volumeExplain}}", volExplain)
+        .replace("{{volRangeBar}}", volRangeBar)
         .replace("{{sourceBadge}}", sourceBadge)
         .replace("{{stravaBar}}", stravaBar)
         .replace("{{loadChart}}", loadChart)
         .replace("{{volume}}", format(snapshot.recentVolumeMinutes))
         .replace("{{acwr}}", "%.2f".format(snapshot.acwr))
         .replace("{{acwrBadge}}", "<span class=\"badge $acwrBadgeClass\">$acwrBadgeLabel</span>")
-        .replace("{{acwrExplain}}", escapeHtml(acwrExplain))
+        .replace("{{acwrExplain}}", acwrExplain)
+        .replace("{{acwrRangeBar}}", acwrRangeBar)
         .replace("{{monotony}}", "%.1f".format(snapshot.monotony))
         .replace("{{monotonyBadge}}", "<span class=\"badge $monoBadgeClass\">$monoBadgeLabel</span>")
-        .replace("{{monotonyExplain}}", escapeHtml(monoExplain))
+        .replace("{{monotonyExplain}}", monoExplain)
+        .replace("{{monoRangeBar}}", monoRangeBar)
         .replace("{{spike10}}", "%.2f".format(snapshot.spike10))
         .replace("{{spike10Badge}}", "<span class=\"badge $spike10BadgeClass\">$spike10BadgeLabel</span>")
-        .replace("{{spike10Explain}}", escapeHtml(spike10Explain))
+        .replace("{{spike10Explain}}", spike10Explain)
+        .replace("{{spike10RangeBar}}", spike10RangeBar)
         .replace("{{strain10}}", "%.0f".format(snapshot.strain10))
         .replace("{{strain10Badge}}", "<span class=\"badge $strain10BadgeClass\">$strain10BadgeLabel</span>")
-        .replace("{{strain10Explain}}", escapeHtml(strain10Explain))
+        .replace("{{strain10Explain}}", strain10Explain)
+        .replace("{{strain10RangeBar}}", strain10RangeBar)
+        .replace("{{rampRate}}", "%+.1f".format(rampRate))
+        .replace("{{rampBadge}}", "<span class=\"badge $rampBadgeClass\">$rampBadgeLabel</span>")
+        .replace("{{rampExplain}}", rampExplain)
+        .replace("{{rampRangeBar}}", rampRangeBar)
         .replace("{{legFeeling}}", state.checkIn.legFeeling.toString())
         .replace("{{mentalReadiness}}", state.checkIn.mentalReadiness.toString())
         .replace("{{timeAvailableMinutes}}", state.checkIn.timeAvailableMinutes.toString())
