@@ -773,13 +773,32 @@ private fun renderDashboard(
         tsb > -25 -> "Building"
         else -> "Overreaching"
     }
-    val tsbExplain = when {
+    val tsbExplainBase = when {
         tsb > 25  -> "You've been very fresh for a while \u2014 if you're not peaking for a race, your fitness may slowly be slipping. Time to add some load back in."
         tsb > 10  -> "You're fresh and fit \u2014 perfect timing for a race or a big quality session. Make the most of it."
         tsb > 0   -> "Feeling good with solid fitness underneath. A great day for a quality effort or a strong long run."
         tsb > -10 -> "You're carrying a normal training load \u2014 exactly where you want to be when building consistently. This is where improvement happens."
         tsb > -25 -> "You're accumulating fatigue from a solid training block. That's normal and productive \u2014 just make sure you're sleeping and eating well."
         else      -> "Accumulated fatigue is getting heavy. If this has been going on for a week or more, an easier week will help more than it hurts."
+    }
+    // Cross-metric awareness: append a relevant secondary signal when it matters
+    val tsbCrossMetric = when {
+        snapshot.acwr > 1.5 -> " Your load ratio has spiked \u2014 dial it back today regardless."
+        snapshot.acwr > 1.3 && tsb > -10 -> " Your load ratio is creeping up though \u2014 keep an eye on it."
+        snapshot.monotony > 2.0 && tsb <= 0  -> " Your training variety is also low \u2014 mix in a different type of session."
+        snapshot.ctl < 15 && tsb > 0     -> " Fitness is still early-stage, so be patient and build gradually."
+        else -> ""
+    }
+    val tsbExplain = tsbExplainBase + tsbCrossMetric
+
+    // Actionable call-to-action for the hero card
+    val tsbCta = when {
+        tsb > 25  -> "\u27A1 Get moving \u2014 a solid tempo or threshold session today will rebuild momentum without overdoing it."
+        tsb > 10  -> "\u26A1 This is your window. Ask the coach for a race-effort session or hit that hard workout you've been saving."
+        tsb > 0   -> "\u2705 Use the freshness \u2014 a quality long run, tempo, or interval session will land well today."
+        tsb > -10 -> "\uD83D\uDCC8 Stay the course. Trust the process and let the coach dial the intensity \u2014 you're on track."
+        tsb > -25 -> "\uD83D\uDCA4 Prioritise sleep and nutrition today. A lighter session or recovery spin will pay dividends."
+        else      -> "\u26D4 Take an easy day or full rest. If you've been pushing for 7+ days straight, schedule a recovery week."
     }
 
     // CTL contextual interpretation
@@ -979,6 +998,7 @@ private fun renderDashboard(
         .replace("{{tsb}}", format(snapshot.tsb))
         .replace("{{tsbBadge}}", "<span class=\"badge $tsbBadgeClass\">$tsbBadgeLabel</span>")
         .replace("{{tsbExplain}}", escapeHtml(tsbExplain))
+        .replace("{{tsbCta}}", escapeHtml(tsbCta))
         .replace("{{tsbHeroClass}}", tsbHeroClass)
         .replace("{{tsbHeroMessage}}", escapeHtml(tsbHeroMessage))
         .replace("{{tsbHeroStatusBadge}}", tsbHeroStatusBadge)

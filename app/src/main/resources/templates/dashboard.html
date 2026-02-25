@@ -360,6 +360,17 @@
             letter-spacing: -.01em;
         }
         .hero-sub { color: var(--text-soft); font-size: 14px; line-height: 1.7; }
+        .hero-cta {
+            margin-top: 12px;
+            font-size: 13.5px;
+            font-weight: 600;
+            color: var(--violet);
+            line-height: 1.6;
+            padding: 9px 14px;
+            background: rgba(155, 114, 255, .08);
+            border-left: 3px solid var(--violet);
+            border-radius: 0 8px 8px 0;
+        }
 
         .metrics-master {
             display: grid;
@@ -928,19 +939,68 @@
             font-size: 15px;
             margin-bottom: 13px;
         }
+        .method-body-wrap h4 {
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-size: 13px;
+            color: var(--violet);
+            margin: 14px 0 6px;
+            letter-spacing: .02em;
+        }
         .method-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-bottom: 14px; }
         .method-cols p { color: var(--text-soft); font-size: 13px; line-height: 1.7; }
         .method-cols p + p { margin-top: 8px; }
+        .method-citation {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-style: italic;
+            margin-top: 4px;
+        }
+        .method-zone-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 8px 0 4px;
+            font-size: 11.5px;
+        }
+        .method-zone-table th {
+            text-align: left;
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            padding: 4px 8px 4px 0;
+            border-bottom: 1px solid var(--line-soft);
+        }
+        .method-zone-table td {
+            padding: 4px 8px 4px 0;
+            color: var(--text-soft);
+            border-bottom: 1px solid rgba(70, 59, 107, .3);
+        }
+        .method-zone-table td:first-child { color: var(--text-lavender); font-weight: 600; }
         .method-formula {
             border: 1px solid rgba(179, 157, 255, .22);
             border-radius: 10px;
-            padding: 13px 14px;
-            text-align: center;
+            padding: 14px 18px;
+            text-align: left;
             color: var(--text-lavender);
             font-size: 12px;
-            line-height: 2;
+            line-height: 2.2;
             background: rgba(9, 6, 26, .86);
             font-family: 'IBM Plex Sans', sans-serif;
+        }
+        .method-formula code {
+            display: block;
+            color: var(--text-lavender-dim);
+        }
+        .method-footer {
+            margin-top: 16px;
+            padding-top: 12px;
+            border-top: 1px solid var(--line-soft);
+            font-size: 12px;
+            color: var(--text-muted);
+            font-style: italic;
+            text-align: center;
+            line-height: 1.6;
         }
 
         /* TSB readiness pill in topbar */
@@ -1213,6 +1273,7 @@
         {{tsbHeroStatusBadge}}
         <div class="hero-message">{{tsbHeroMessage}}</div>
         <div class="hero-sub">{{tsbExplain}}</div>
+        <div class="hero-cta">{{tsbCta}}</div>
     </div>
 </div>
 
@@ -1296,30 +1357,60 @@
 </div>
 
 <details class="method-disclosure anim-in anim-d6" id="detail-method">
-    <summary><span class="chevron"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span> Model + methodology</summary>
+    <summary><span class="chevron"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span> &#x1F9EA; Nerd Zone &mdash; How the Sausage Gets Made</summary>
     <div class="method-body-wrap">
-        <h3>The Banister Impulse-Response Model</h3>
+        <h3>The Engine Under the Hood</h3>
         <div class="method-cols">
             <div>
-                <p>Developed by Eric Banister, the impulse-response model treats each training session as a physiological impulse with two competing outcomes: durable fitness gain and short-lived fatigue cost.</p>
-                <p>Maestro extends that model with ACWR, monotony, and short-window spike/strain diagnostics so daily coaching recommendations are tied to both adaptation and risk management.</p>
+                <h4>The Model</h4>
+                <p>Every session you do triggers two competing biological responses: a <strong>fitness gain</strong> that builds slowly and lasts weeks, and a <strong>fatigue cost</strong> that hits fast but fades within days. Eric Banister formalised this as the <em>impulse-response</em> model in 1975 &mdash; one of sports science&rsquo;s most battle-tested frameworks.</p>
+                <p>We track both responses using <strong>exponentially weighted moving averages</strong> (EMAs). Why EMAs instead of simple rolling windows? Because your body doesn&rsquo;t forget Tuesday&rsquo;s session just because Saturday arrived. EMAs give recent sessions more influence while letting older work fade gradually &mdash; mimicking how biological adaptation actually works.</p>
+                <p>The <strong>42-day</strong> time constant for fitness reflects how long aerobic and structural adaptations persist. The <strong>7-day</strong> constant for fatigue reflects how quickly neuromuscular and glycogen debt dissipates. Both are well-established population averages from Mujika &amp; Busso&rsquo;s taper research.</p>
+                <p class="method-citation">Banister et al., 1975. &ldquo;A systems model of training for athletic performance.&rdquo; &bull; Mujika &amp; Busso, 1996. Modelling training adaptation.</p>
+
+                <h4>TRIMP &mdash; Quantifying Each Session</h4>
+                <p>TRIMP (TRaining IMPulse) converts every session into a single stress number using your heart rate reserve (%HRR) and duration. Higher-intensity zones carry disproportionate weight because a minute at VO2max hammers you more than a minute of easy jogging.</p>
+                <table class="method-zone-table">
+                    <thead><tr><th>Zone</th><th>%HRR</th><th>Weight</th><th>Effort feel</th></tr></thead>
+                    <tbody>
+                        <tr><td>Z1</td><td>&lt; 68%</td><td>1&times;</td><td>Easy / recovery</td></tr>
+                        <tr><td>Z2</td><td>68&ndash;82%</td><td>2&times;</td><td>Tempo / steady</td></tr>
+                        <tr><td>Z3</td><td>82&ndash;90%</td><td>3&times;</td><td>Threshold / VO2max</td></tr>
+                        <tr><td>Z4</td><td>&gt; 90%</td><td>4&times;</td><td>Anaerobic / sprint</td></tr>
+                    </tbody>
+                </table>
+                <p class="method-citation">Zone model inspired by Lucia et al. and the Seiler 3-zone framework.</p>
             </div>
             <div>
-                <p><strong>Fitness (CTL)</strong> — 42-day EMA of daily TRIMP.</p>
-                <p><strong>Fatigue (ATL)</strong> — 7-day EMA of daily TRIMP.</p>
-                <p><strong>Readiness (TSB)</strong> — CTL minus ATL.</p>
-                <p><strong>Load Risk (ACWR)</strong> — ATL divided by CTL.</p>
-                <p><strong>10-day spike & strain</strong> — short-term overload and accumulated stress signal.</p>
+                <h4>The Extensions</h4>
+                <p><strong>Fitness (CTL)</strong> &mdash; Chronic Training Load. A 42-day EMA of daily TRIMP. Think of it as your conditioning bank account &mdash; slow to build, slow to drain.</p>
+                <p><strong>Fatigue (ATL)</strong> &mdash; Acute Training Load. A 7-day EMA of daily TRIMP. The &ldquo;I need a nap&rdquo; signal. It spikes after hard blocks and drops when you rest.</p>
+                <p><strong>Readiness (TSB)</strong> &mdash; Training Stress Balance. Fitness minus fatigue. When TSB is positive you&rsquo;re fresh; when negative you&rsquo;re carrying load. A taper drives TSB upward before a race.</p>
+
+                <h4>Load Risk (ACWR)</h4>
+                <p>The Acute:Chronic Workload Ratio divides recent load (ATL) by long-term load (CTL). Maestro uses the <em>uncoupled</em> ACWR model so today&rsquo;s spike doesn&rsquo;t contaminate the baseline.</p>
+                <p><strong>0.8&ndash;1.3</strong> is the &ldquo;sweet spot&rdquo; where you&rsquo;re pushing enough to adapt without high injury risk. Above <strong>1.5</strong> you&rsquo;re in the danger zone &mdash; the research shows injury risk roughly doubles.</p>
+                <p class="method-citation">Gabbett, 2016. &ldquo;The training&mdash;injury prevention paradox.&rdquo; BJSM.</p>
+
+                <h4>Monotony &amp; Strain</h4>
+                <p><strong>Monotony</strong> (Foster, 1998) = mean daily TRIMP &divide; standard deviation. If every day looks the same, SD &rarr; 0, monotony &rarr; &infin;. High monotony + high volume is the classic recipe for overtraining and illness.</p>
+                <p><strong>Strain</strong> = mean TRIMP &times; monotony. It captures both <em>how much</em> and <em>how repetitively</em> you&rsquo;re training. Think of it as a burnout index.</p>
+                <p><strong>10-day spike</strong> compares recent 10-day load to your long-term average. It catches short sharp jumps that the 42-day CTL window might smooth over.</p>
+                <p class="method-citation">Foster, 1998. &ldquo;Monitoring training in athletes with reference to overtraining syndrome.&rdquo; Med Sci Sports Exerc.</p>
             </div>
         </div>
         <div class="method-formula">
-            TRIMP = duration × %HRR × zone-weight
-            &nbsp;|&nbsp;
-            CTLₜ = CTLₜ₋₁ + (TRIMP − CTLₜ₋₁) / 42
-            &nbsp;|&nbsp;
-            TSB = CTL − ATL
-            &nbsp;|&nbsp;
-            ACWR = ATL / CTL
+            <code>TRIMP = duration &times; %HRR &times; zone-weight</code>
+            <code>&alpha; = 1 &minus; e<sup>&minus;1/&tau;</sup> &nbsp;&nbsp;(&tau; = 42 for fitness, 7 for fatigue)</code>
+            <code>CTL&#8348; = CTL&#8348;&#8331;&#8321; + &alpha; &times; (TRIMP &minus; CTL&#8348;&#8331;&#8321;)</code>
+            <code>TSB = CTL &minus; ATL</code>
+            <code>ACWR = ATL &divide; CTL</code>
+            <code>Monotony = mean(daily TRIMP) &divide; SD(daily TRIMP)</code>
+            <code>Strain = mean(TRIMP) &times; Monotony</code>
+        </div>
+        <div class="method-footer">
+            &ldquo;All models are wrong, some are useful.&rdquo; &mdash; George E. P. Box<br />
+            Maestro uses these as guardrails, not gospel. The coach layer adds context your body of data can&rsquo;t capture alone.
         </div>
     </div>
 </details>
