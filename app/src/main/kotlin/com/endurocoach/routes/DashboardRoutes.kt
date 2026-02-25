@@ -114,7 +114,7 @@ class DashboardStateStore {
         // Anchor message starts/continues the chat thread for this workout
         val anchor = ConversationMessage(
             role = "model",
-            content = "Session prescribed. Main set: ${workout.mainSet.take(120).trimEnd()}. Ask me anything about it or request adjustments.",
+            content = "Session prescribed: ${workout.session.take(140).trimEnd()}. Ask me anything about it or request adjustments.",
             timestamp = Instant.now().toString()
         )
         state = state.copy(
@@ -449,16 +449,14 @@ private fun buildChatSystemInstruction(state: DashboardState): String {
 
     val workoutBlock = if (workout != null) buildString {
         appendLine("\nLatest prescribed workout:")
-        appendLine("- Warm-up: ${workout.warmup}")
-        appendLine("- Main set: ${workout.mainSet}")
-        appendLine("- Cool-down: ${workout.cooldown}")
+        appendLine("- Session: ${workout.session}")
         appendLine("- Coach reasoning: ${workout.coachReasoning}")
     }.trimEnd() else "\nNo workout has been prescribed yet."
 
     val previousBlock = if (state.workoutHistory.size > 1) buildString {
         appendLine("\nPrevious sessions (brief context, most recent first):")
         state.workoutHistory.drop(1).take(2).forEach { entry ->
-            appendLine("- ${entry.generatedAt.toString().take(10)}: ${entry.workout.mainSet.take(120).trimEnd()}")
+            appendLine("- ${entry.generatedAt.toString().take(10)}: ${entry.workout.session.take(120).trimEnd()}")
         }
     }.trimEnd() else ""
 
@@ -748,9 +746,7 @@ private fun renderDashboard(
 
     val workoutCard = state.latestWorkout?.let {
         """
-<div class="workout-section"><div class="ws-header"><span class="ws-icon">&#x1F525;</span><span class="ws-label">Warm-up</span></div><p>${escapeHtml(it.warmup)}</p></div>
-<div class="workout-section"><div class="ws-header"><span class="ws-icon">&#x26A1;</span><span class="ws-label">Main Set</span></div><p>${escapeHtml(it.mainSet)}</p></div>
-<div class="workout-section"><div class="ws-header"><span class="ws-icon">&#x1F9CA;</span><span class="ws-label">Cool-down</span></div><p>${escapeHtml(it.cooldown)}</p></div>
+<div class="workout-section"><p>${escapeHtml(it.session)}</p></div>
 <div class="reasoning-block"><div class="ws-header"><span class="ws-icon">&#x1F9E0;</span><span class="ws-label">Coach Reasoning</span></div><p>${escapeHtml(it.coachReasoning)}</p></div>
 <p class="generated-at">Generated at: ${state.generatedAt ?: "-"}</p>
 """.trimIndent()
@@ -1241,9 +1237,7 @@ private fun renderWorkoutHistory(history: List<WorkoutHistoryEntry>): String {
         <span class="history-meta">Legs ${item.checkIn.legFeeling}/10 · Mind ${item.checkIn.mentalReadiness}/10 · ${item.checkIn.timeAvailableMinutes}m · $philosophy $sourceBadge</span>
     </div>
     <div class="history-body">
-        <p><strong>Warm-up:</strong> ${escapeHtml(item.workout.warmup)}</p>
-        <p><strong>Main set:</strong> ${escapeHtml(item.workout.mainSet)}</p>
-        <p><strong>Cool-down:</strong> ${escapeHtml(item.workout.cooldown)}</p>
+        <p>${escapeHtml(item.workout.session)}</p>
     </div>
 </div>"""
     }

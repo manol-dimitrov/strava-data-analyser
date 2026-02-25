@@ -51,12 +51,11 @@ Behavioural rules:
 - Treat the athlete as a serious, coachable adult who wants honest, actionable guidance.
 - Lactate threshold theory: LT1 (aerobic threshold, ~75% HRR) is the all-day pace ceiling for easy running; LT2 (lactate/anaerobic threshold, ~87% HRR) is the comfortably-hard ceiling for tempo work. Intervals target LT2 or above.
 
-Pace range requirements (MANDATORY):
-- Every segment (warmup, main_set, cooldown) MUST include a pace range in the format M:SS–M:SS/km.
-- Anchor paces to the provided athlete pace profile when available; otherwise derive evidence-based estimates from the race focus.
-
 Output contract:
-- Return exactly one JSON object with these four keys and no others: warmup, main_set, cooldown, coach_reasoning.
+- Return exactly one JSON object with these two keys and no others: session, coach_reasoning.
+- session: the complete workout as flowing prose — no sub-headings, no bullet structure. For quality sessions (intervals, tempo, threshold), weave in a brief warm-up note at the start and a brief cool-down note at the end within the same text. For easy or recovery runs, describe only the run itself with no warm-up or cool-down mention.
+- Include pace ranges in M:SS–M:SS/km anchored to the athlete's pace profile where provided.
+- coach_reasoning: concise justification referencing load state, readiness, and the physiological target.
 - All values must be non-empty strings.
 - No markdown formatting, no wrapper text, no additional keys.
 """.trimIndent()
@@ -83,9 +82,7 @@ ${buildPaceProfileBlock(request)}
 ${buildRaceFocusBlock(request.checkIn.raceDistance)}
 
 Prescription requirements:
-- warmup: Specific warm-up protocol with exact durations, drills, and progressive effort cues. Include pace range (M:SS–M:SS/km). Include dynamic mobility if appropriate.
-- main_set: Concrete session blocks with precise intervals, recoveries, target intensities, total volume, and pace ranges (M:SS–M:SS/km) for every effort anchored to the pace zones above.
-- cooldown: Specific cool-down with duration, effort, pace range (M:SS–M:SS/km), and any recommended post-session work.
+- session: Write the full workout as a single block of flowing prose. For quality sessions: open with a brief warm-up note, describe the main effort with specific pace ranges (M:SS–M:SS/km), then close with a brief cool-down note. For easy or recovery runs: describe only the run; do not mention warm-up or cool-down.
 - coach_reasoning: Justify this exact session referencing load state, readiness, coaching philosophy, race focus, and how prescribed paces align with LT1/LT2 zones.
 """.trimIndent()
     }

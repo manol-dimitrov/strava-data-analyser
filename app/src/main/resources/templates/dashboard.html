@@ -173,6 +173,7 @@
             text-decoration: none;
             font-size: 0;
             line-height: 0;
+            min-height: 44px;
             transform: translateY(0);
             transition: transform .15s ease, opacity .15s ease;
         }
@@ -185,7 +186,11 @@
             border-radius: 10px;
             color: var(--text-muted);
             font-size: 12px;
+            min-height: 44px;
             padding: 7px 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             transition: .16s ease;
             background: rgba(35, 27, 66, .62);
         }
@@ -462,7 +467,11 @@
         }
         .tip-wrap:hover .tip-box,
         .tip-wrap:focus .tip-box,
-        .tip-wrap:focus-within .tip-box { opacity: 1; }
+        .tip-wrap:focus-within .tip-box,
+        .tip-wrap[aria-expanded="true"] .tip-box {
+            opacity: 1;
+            pointer-events: auto;
+        }
 
         .workouts-card,
         .chart-card,
@@ -757,12 +766,16 @@
             border-radius: 14px;
             background: rgba(16, 10, 46, .5);
             border: 1px solid rgba(179, 157, 255, .14);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
         }
         .tab-btn {
             flex: 1;
             border: none;
             border-radius: 11px;
-            padding: 10px 16px;
+            padding: 11px 16px;
+            min-height: 44px;
             font-family: 'IBM Plex Sans', sans-serif;
             font-size: 13px;
             font-weight: 600;
@@ -772,6 +785,8 @@
             background: transparent;
             transition: color .18s ease, background .18s ease, box-shadow .18s ease;
             display: flex; align-items: center; justify-content: center; gap: 7px;
+            white-space: nowrap;
+            min-width: max-content;
         }
         .tab-btn:hover { color: var(--text-soft); }
         .tab-btn.active {
@@ -833,7 +848,7 @@
         .chat-input {
             flex: 1; background: rgba(255,255,255,.06);
             border: 1px solid rgba(255,255,255,.1); border-radius: 12px;
-            padding: 12px 16px; color: var(--text); font-size: 14px;
+            padding: 12px 16px; color: var(--text); font-size: 15px;
             font-family: inherit; outline: none; min-width: 0;
             resize: vertical; min-height: 48px; max-height: 160px;
             line-height: 1.5;
@@ -984,6 +999,166 @@
             .chat-form { flex-direction: column; }
             .chat-form .chat-send { width: 100%; min-width: 0; }
             .coach-input-bar { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 560px) {
+            body::after {
+                opacity: .01;
+                animation-duration: 14s;
+            }
+            .topbar {
+                top: 8px;
+                border-radius: 14px;
+                gap: 10px;
+                flex-wrap: wrap;
+            }
+            .topbar-brand {
+                min-width: 0;
+            }
+            .topbar-right {
+                width: 100%;
+                justify-content: flex-start;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            .strava-status,
+            .tsb-topbar-pill,
+            .btn-disconnect {
+                min-height: 44px;
+            }
+            .strava-status {
+                padding: 10px 12px;
+                font-size: 13px;
+            }
+            .tab-bar {
+                border-radius: 12px;
+                padding: 3px;
+                gap: 3px;
+            }
+            .tab-btn {
+                flex: 0 0 auto;
+                padding: 11px 14px;
+                font-size: 13px;
+            }
+            .hero-card,
+            .workouts-card,
+            .chart-card,
+            .card,
+            .method-body-wrap {
+                padding: 18px 16px;
+            }
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 4px;
+            }
+            .hero-message {
+                font-size: 19px;
+            }
+            .metric-card {
+                padding: 16px;
+            }
+            .metric-label,
+            .hero-label,
+            .ws-label,
+            .history-title,
+            .coach-workout-history summary {
+                font-size: 11px;
+                letter-spacing: .08em;
+            }
+            .metric-explain,
+            .hero-sub,
+            .history-body p,
+            .method-cols p {
+                font-size: 14px;
+                line-height: 1.65;
+            }
+            .workouts-scroll {
+                gap: 10px;
+                padding-bottom: 10px;
+            }
+            .workout-item {
+                flex-basis: 84%;
+                max-width: 300px;
+            }
+            .onboarding-card {
+                padding: 20px 16px 16px;
+            }
+            .btn,
+            .onb-choice,
+            .onb-nav .btn,
+            .chat-send {
+                min-height: 44px;
+            }
+            .btn {
+                padding-top: 11px;
+                padding-bottom: 11px;
+            }
+            .chat-thread {
+                max-height: 56vh;
+            }
+            .chat-form {
+                gap: 8px;
+            }
+            .chat-input {
+                font-size: 16px;
+                min-height: 52px;
+            }
+            .site-footer {
+                flex-wrap: wrap;
+                justify-content: flex-start;
+                gap: 12px 18px;
+                padding-top: 24px;
+            }
+        }
+
+        @media (max-width: 420px) {
+            .topbar {
+                margin-left: 8px;
+                margin-right: 8px;
+                padding: 10px;
+            }
+            .tab-bar {
+                margin-left: 8px;
+                margin-right: 8px;
+            }
+            .page {
+                padding-left: 10px;
+                padding-right: 10px;
+            }
+            .brand-name {
+                font-size: 15px;
+            }
+            .hero-number {
+                font-size: 48px;
+            }
+            .chat-msg {
+                max-width: 92%;
+                padding: 11px 13px;
+                font-size: 14px;
+            }
+        }
+
+        @media (hover: none) and (pointer: coarse) {
+            .metric-card:hover,
+            .workout-item:hover,
+            .btn-primary:hover,
+            .btn-ghost:hover,
+            .btn-connect:hover {
+                transform: none;
+                box-shadow: none;
+            }
+            .metric-card { box-shadow: var(--shadow-md); }
+            .tip-icon {
+                width: 16px;
+                height: 16px;
+                font-size: 10px;
+            }
+            .tip-box {
+                width: min(240px, calc(100vw - 32px));
+                font-size: 12px;
+                line-height: 1.55;
+            }
         }
     </style>
 </head>
@@ -1293,12 +1468,19 @@ document.querySelectorAll('.slider-row input[type="range"]').forEach(function(r)
 document.querySelectorAll('.tip-wrap').forEach(function(wrap) {
     wrap.setAttribute('tabindex', '0');
     wrap.setAttribute('role', 'button');
+    wrap.setAttribute('aria-expanded', 'false');
     var tip = wrap.querySelector('.tip-box');
     if (tip) {
         var id = 'tip-' + Math.random().toString(36).slice(2, 8);
         tip.id = id;
         tip.setAttribute('role', 'tooltip');
+        tip.hidden = true;
         wrap.setAttribute('aria-describedby', id);
+    }
+    function setTipOpen(open) {
+        if (!tip) return;
+        wrap.setAttribute('aria-expanded', open ? 'true' : 'false');
+        tip.hidden = !open;
     }
     function repositionTip() {
         if (!tip) return;
@@ -1320,9 +1502,49 @@ document.querySelectorAll('.tip-wrap').forEach(function(wrap) {
             tip.style.transform = 'translateX(-50%)';
         }
     }
-    wrap.addEventListener('mouseenter', repositionTip);
-    wrap.addEventListener('focus', repositionTip);
-    wrap.addEventListener('focusin', repositionTip);
+    wrap.addEventListener('mouseenter', function() {
+        setTipOpen(true);
+        repositionTip();
+    });
+    wrap.addEventListener('mouseleave', function() { setTipOpen(false); });
+    wrap.addEventListener('focusin', function() {
+        setTipOpen(true);
+        repositionTip();
+    });
+    wrap.addEventListener('focusout', function(e) {
+        if (!wrap.contains(e.relatedTarget)) setTipOpen(false);
+    });
+    wrap.addEventListener('click', function(e) {
+        e.preventDefault();
+        var isOpen = wrap.getAttribute('aria-expanded') === 'true';
+        document.querySelectorAll('.tip-wrap[aria-expanded="true"]').forEach(function(other) {
+            if (other !== wrap) {
+                other.setAttribute('aria-expanded', 'false');
+                var otherTip = other.querySelector('.tip-box');
+                if (otherTip) otherTip.hidden = true;
+            }
+        });
+        setTipOpen(!isOpen);
+        if (!isOpen) repositionTip();
+    });
+});
+
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.tip-wrap')) return;
+    document.querySelectorAll('.tip-wrap[aria-expanded="true"]').forEach(function(wrap) {
+        wrap.setAttribute('aria-expanded', 'false');
+        var tip = wrap.querySelector('.tip-box');
+        if (tip) tip.hidden = true;
+    });
+});
+
+document.addEventListener('keydown', function(e) {
+    if (e.key !== 'Escape') return;
+    document.querySelectorAll('.tip-wrap[aria-expanded="true"]').forEach(function(wrap) {
+        wrap.setAttribute('aria-expanded', 'false');
+        var tip = wrap.querySelector('.tip-box');
+        if (tip) tip.hidden = true;
+    });
 });
 
 // ── Auto-scroll chat thread ──

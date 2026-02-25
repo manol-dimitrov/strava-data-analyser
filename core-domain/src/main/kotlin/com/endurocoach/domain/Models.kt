@@ -51,9 +51,7 @@ data class WorkoutRequest(
 )
 
 data class WorkoutPlan(
-    val warmup: String,
-    val mainSet: String,
-    val cooldown: String,
+    val session: String,
     val coachReasoning: String
 )
 

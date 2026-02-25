@@ -11,17 +11,13 @@ class StructuredWorkoutValidationTest {
     fun validPayloadParses() {
         val json = """
         {
-            "warmup": "10 min easy jog",
-            "main_set": "5 x 1km at threshold",
-            "cooldown": "10 min walk",
+            "session": "After a 10-min easy jog, run 5 x 1km at threshold.",
             "coach_reasoning": "TSB is positive, time to push."
         }
         """.trimIndent()
 
         val plan = StructuredWorkoutValidation.parseAndValidate(json)
-        assertEquals("10 min easy jog", plan.warmup)
-        assertEquals("5 x 1km at threshold", plan.mainSet)
-        assertEquals("10 min walk", plan.cooldown)
+        assertEquals("After a 10-min easy jog, run 5 x 1km at threshold.", plan.session)
         assertEquals("TSB is positive, time to push.", plan.coachReasoning)
     }
 
@@ -43,9 +39,7 @@ class StructuredWorkoutValidationTest {
     fun missingKeyThrows() {
         val json = """
         {
-            "warmup": "10 min easy jog",
-            "main_set": "5 x 1km at threshold",
-            "cooldown": "10 min walk"
+            "session": "Easy 30-min run at conversational pace."
         }
         """.trimIndent()
 
@@ -59,9 +53,7 @@ class StructuredWorkoutValidationTest {
     fun extraKeyThrows() {
         val json = """
         {
-            "warmup": "10 min easy jog",
-            "main_set": "5 x 1km at threshold",
-            "cooldown": "10 min walk",
+            "session": "Easy 30-min run.",
             "coach_reasoning": "Looks good.",
             "bonus": "extra field"
         }
@@ -76,9 +68,7 @@ class StructuredWorkoutValidationTest {
     fun blankValueThrows() {
         val json = """
         {
-            "warmup": "   ",
-            "main_set": "5 x 1km at threshold",
-            "cooldown": "10 min walk",
+            "session": "   ",
             "coach_reasoning": "Data driven."
         }
         """.trimIndent()
@@ -92,9 +82,7 @@ class StructuredWorkoutValidationTest {
     fun numericValueThrows() {
         val json = """
         {
-            "warmup": 42,
-            "main_set": "5 x 1km at threshold",
-            "cooldown": "10 min walk",
+            "session": 42,
             "coach_reasoning": "Because numbers."
         }
         """.trimIndent()
@@ -108,9 +96,7 @@ class StructuredWorkoutValidationTest {
     fun emptyStringValueThrows() {
         val json = """
         {
-            "warmup": "",
-            "main_set": "5 x 1km at threshold",
-            "cooldown": "10 min walk",
+            "session": "",
             "coach_reasoning": "Because."
         }
         """.trimIndent()

@@ -12,7 +12,7 @@ class InvalidWorkoutSchemaException(message: String) : WorkoutSchemaException(me
 class MissingWorkoutKeyException(key: String) : WorkoutSchemaException("Missing required key: $key")
 
 object StructuredWorkoutValidation {
-    private val requiredKeys = setOf("warmup", "main_set", "cooldown", "coach_reasoning")
+    private val requiredKeys = setOf("session", "coach_reasoning")
     private val json = Json { ignoreUnknownKeys = false }
 
     fun parseAndValidate(payload: String): WorkoutPlan {
@@ -29,9 +29,7 @@ object StructuredWorkoutValidation {
         }
 
         return WorkoutPlan(
-            warmup = obj.requiredString("warmup"),
-            mainSet = obj.requiredString("main_set"),
-            cooldown = obj.requiredString("cooldown"),
+            session = obj.requiredString("session"),
             coachReasoning = obj.requiredString("coach_reasoning")
         )
     }

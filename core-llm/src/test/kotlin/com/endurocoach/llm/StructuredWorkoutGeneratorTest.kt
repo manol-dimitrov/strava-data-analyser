@@ -9,9 +9,7 @@ class StructuredWorkoutGeneratorTest {
 
     private val validJson = """
         {
-            "warmup": "10 min easy",
-            "main_set": "6 x 800m",
-            "cooldown": "5 min walk",
+            "session": "After a 10-min easy jog, run 6 x 800m with 90s rest, then 5 min easy to finish.",
             "coach_reasoning": "Load is manageable."
         }
     """.trimIndent()
@@ -27,7 +25,7 @@ class StructuredWorkoutGeneratorTest {
             validJson
         }
         assertEquals(1, callCount, "Should not retry when first response is valid")
-        assertEquals("10 min easy", plan.warmup)
+        assertEquals("After a 10-min easy jog, run 6 x 800m with 90s rest, then 5 min easy to finish.", plan.session)
     }
 
     @Test
@@ -39,7 +37,7 @@ class StructuredWorkoutGeneratorTest {
             if (callCount == 1) invalidJson else validJson
         }
         assertEquals(2, callCount, "Should retry once after first invalid response")
-        assertEquals("6 x 800m", plan.mainSet)
+        assertEquals("After a 10-min easy jog, run 6 x 800m with 90s rest, then 5 min easy to finish.", plan.session)
     }
 
     @Test
