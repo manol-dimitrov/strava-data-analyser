@@ -18,6 +18,8 @@ dependencies {
     implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.ktor.client.core)
     implementation(libs.logback.classic)
+
+    testImplementation(libs.kotlin.test)
 }
 
 application {
