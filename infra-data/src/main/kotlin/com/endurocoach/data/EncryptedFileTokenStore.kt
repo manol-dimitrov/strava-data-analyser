@@ -11,7 +11,7 @@ import javax.crypto.spec.GCMParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
 class EncryptedFileTokenStore(
-    private val baseDir: File = File(System.getProperty("user.home"), ".enduro-coach"),
+    private val baseDir: File = File(System.getenv("DATA_DIR") ?: System.getProperty("user.home"), ".enduro-coach"),
     private val envKeyName: String = "ENDURO_TOKEN_KEY"
 ) : TokenStore {
     private val random = SecureRandom()

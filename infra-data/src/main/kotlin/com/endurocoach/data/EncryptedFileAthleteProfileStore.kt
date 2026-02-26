@@ -22,7 +22,7 @@ import javax.crypto.spec.SecretKeySpec
  * `ENDURO_TOKEN_KEY` environment variable.
  */
 class EncryptedFileAthleteProfileStore(
-    private val baseDir: File = File(System.getProperty("user.home"), ".enduro-coach"),
+    private val baseDir: File = File(System.getenv("DATA_DIR") ?: System.getProperty("user.home"), ".enduro-coach"),
     private val envKeyName: String = "ENDURO_TOKEN_KEY"
 ) : AthleteProfileStore {
 

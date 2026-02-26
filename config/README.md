@@ -16,6 +16,17 @@ Copy this file, fill in your actual values, then paste the JSON into Railway's *
 
 **Note**: Railway auto-injects `PORT` — do not add it manually.
 
+### Persistent Storage (required to survive redeployments)
+
+Without a persistent volume, onboarding profiles and OAuth tokens are stored on the container's ephemeral filesystem and are wiped on every redeploy.
+
+To fix this:
+
+1. In the Railway dashboard → your service → **Volumes** tab, add a volume and set the mount path to `/data`.
+2. Add `DATA_DIR=/data` to your Railway environment variables.
+
+Railway will then write all `.enc` files under `/data/.enduro-coach/`, which persists across deploys.
+
 ## Local Development
 
 **File**: `../.env.example`
@@ -45,6 +56,7 @@ Or use an env-loader tool like `direnv` or your IDE's run configuration.
 | `STRAVA_CLIENT_SECRET` | [strava.com/settings/api](https://www.strava.com/settings/api) | Strava OAuth |
 | `STRAVA_REDIRECT_URI` | Your app URL + `/api/strava/exchange` | OAuth callback |
 | `ENDURO_TOKEN_KEY` | Leave empty for auto-generation | Token encryption |
+| `DATA_DIR` | Railway volume mount path (e.g. `/data`) | Persistent storage across redeploys |
 
 ## Application Config (HOCON)
 
