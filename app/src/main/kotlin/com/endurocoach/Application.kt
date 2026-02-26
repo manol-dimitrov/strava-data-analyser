@@ -66,6 +66,27 @@ data class LoadSnapshotResponse(
     val series: List<LoadPointResponse>
 )
 
+@Serializable
+data class AthleteProfileResponse(
+    val sportFocus: String,
+    val targetEventName: String,
+    val targetEventDate: String,
+    val maxHr: Int,
+    val restingHr: Int,
+    val onboardingCompleted: Boolean
+)
+
+@Serializable
+data class WorkoutPlanResponse(
+    val session: String,
+    val coachReasoning: String,
+    val generatedAt: String?,
+    val source: String
+)
+
+@Serializable
+data class WorkoutResponse(val workout: WorkoutPlanResponse?)
+
 fun Application.module() {
     install(ContentNegotiation) {
         json()
@@ -475,6 +496,83 @@ fun Application.module() {
 
         get("/api/demo-load") {
             call.respond(mapOf("notice" to "Deprecated endpoint; use /api/load"))
+        }
+
+        get("/api/athlete") {
+            val sessionId = call.request.cookies[SESSION_COOKIE]
+            val session = sessionRegistry.getOrCreate(sessionId)
+            val state = session.dashboardState.read()
+            call.respond(
+                AthleteProfileResponse(
+                    sportFocus = state.onboarding.sportFocus,
+                    targetEventName = state.onboarding.targetEventName,
+                    targetEventDate = state.onboarding.targetEventDate,
+                    maxHr = state.maxHr,
+                    restingHr = state.restingHr,
+                    onboardingCompleted = state.onboarding.completed
+                )
+            )
+        }
+
+        get("/api/workout") {
+            val sessionId = call.request.cookies[SESSION_COOKIE]
+            val session = sessionRegistry.getOrCreate(sessionId)
+            val state = session.dashboardState.read()
+            val workout = state.latestWorkout
+            val plan = workout?.let {
+                WorkoutPlanResponse(
+                    session = it.session,
+                    coachReasoning = it.coachReasoning,
+                    generatedAt = state.generatedAt?.toString(),
+                    source = state.source
+                )
+            }
+            call.respond(WorkoutResponse(workout = plan))
+        }
+
+        get("/robots.txt") {
+            call.respondText(
+                """
+                User-agent: *
+                Allow: /
+
+                User-agent: GPTBot
+                Allow: /
+
+                User-agent: ClaudeBot
+                Allow: /
+
+                User-agent: PerplexityBot
+                Allow: /
+
+                Sitemap: /llms.txt
+                """.trimIndent(),
+                io.ktor.http.ContentType.Text.Plain
+            )
+        }
+
+        get("/llms.txt") {
+            call.respondText(
+                """
+                # Maestro — AI Endurance Coach
+
+                > Maestro analyses your Strava training data and prescribes daily workouts using the Banister impulse-response model and AI language models.
+
+                ## Docs
+
+                - [Privacy Policy](/privacy)
+                - [Terms of Service](/terms)
+
+                ## API
+
+                - [GET /api/load](/api/load): Training load metrics (CTL, ATL, TSB, ACWR, monotony, CTL ramp rate, recent volume) with a daily time-series. Query params: `days` (7–120, default 45), `maxHr` (120–230, default 190), `restingHr` (30–90, default 50). Returns JSON `LoadSnapshotResponse`.
+                - [GET /api/athlete](/api/athlete): Current athlete profile for the session — sport focus, target event name/date, heart-rate profile (maxHr, restingHr), and whether onboarding is complete. Returns JSON `AthleteProfileResponse`.
+                - [GET /api/workout](/api/workout): Most recently generated workout plan for the session — session prescription, coach reasoning, generation timestamp, and data source. Returns JSON `WorkoutPlanResponse`, or `{"workout":null}` when no plan has been generated yet.
+                - [GET /api/strava/status](/api/strava/status): Whether the current session has a connected Strava account. Returns `{"connected": true|false}`.
+                - [GET /health](/health): Liveness probe. Returns plain text `maestro scaffold is running`.
+                """.trimIndent(),
+                io.ktor.http.ContentType.Text.Plain
+            )
         }
     }
 }
