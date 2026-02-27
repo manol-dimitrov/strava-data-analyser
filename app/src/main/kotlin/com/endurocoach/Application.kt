@@ -17,7 +17,9 @@ import com.endurocoach.llm.GeminiConfig
 import com.endurocoach.llm.PerplexityClient
 import com.endurocoach.llm.PerplexityConfig
 import com.endurocoach.routes.DashboardDependencies
+import com.endurocoach.routes.McpDependencies
 import com.endurocoach.routes.installDashboardRoutes
+import com.endurocoach.routes.installMcpRoutes
 import com.endurocoach.session.SESSION_COOKIE
 import com.endurocoach.session.SESSION_MAX_AGE
 import com.endurocoach.session.SessionRegistry
@@ -129,6 +131,15 @@ fun Application.module() {
                         maxHr = maxHr,
                         restingHr = restingHr
                     )
+                }
+            )
+        )
+
+        installMcpRoutes(
+            McpDependencies(
+                sessionRegistry = sessionRegistry,
+                loadProvider = { repo, days, maxHr, restingHr ->
+                    buildLoadSnapshot(repository = repo, days = days, maxHr = maxHr, restingHr = restingHr)
                 }
             )
         )
@@ -563,7 +574,11 @@ fun Application.module() {
                 - [Privacy Policy](/privacy)
                 - [Terms of Service](/terms)
 
-                ## API
+                ## MCP Server
+
+                - [POST /mcp](/mcp): Model Context Protocol (MCP) endpoint implementing the Streamable-HTTP transport (protocol version 2024-11-05). Supports `initialize`, `tools/list`, and `tools/call`. Each tool accepts an optional `sessionId` argument (value of the `enduro_session` cookie); omit it to receive demo data. Tools: `get_training_load`, `get_athlete_profile`, `get_workout_plan`.
+
+                ## REST API
 
                 - [GET /api/load](/api/load): Training load metrics (CTL, ATL, TSB, ACWR, monotony, CTL ramp rate, recent volume) with a daily time-series. Query params: `days` (7–120, default 45), `maxHr` (120–230, default 190), `restingHr` (30–90, default 50). Returns JSON `LoadSnapshotResponse`.
                 - [GET /api/athlete](/api/athlete): Current athlete profile for the session — sport focus, target event name/date, heart-rate profile (maxHr, restingHr), and whether onboarding is complete. Returns JSON `AthleteProfileResponse`.
