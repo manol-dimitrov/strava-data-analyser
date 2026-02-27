@@ -71,6 +71,7 @@ data class LoadSnapshotResponse(
 )
 
 @Serializable
+
 data class RecentSessionResponse(
     val date: String,
     val name: String,
