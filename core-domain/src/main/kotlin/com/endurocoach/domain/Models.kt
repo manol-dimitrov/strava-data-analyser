@@ -47,7 +47,9 @@ data class WorkoutRequest(
     val ctlRampRate: Double,
     val spike10: Double = 1.0,
     val strain10: Double = 0.0,
-    val recentPaceProfile: RecentPaceProfile? = null
+    val recentPaceProfile: RecentPaceProfile? = null,
+    val daysSinceLastHardSession: Int? = null,
+    val recentSessions: List<RecentSessionSummary> = emptyList()
 )
 
 data class WorkoutPlan(
@@ -78,7 +80,17 @@ data class LoadSnapshot(
     val spike10: Double = 1.0,
     /** Foster strain over the last 10 days: mean(last10 TRIMP) × monotony(last10).
      *  Captures accumulated fatigue from both volume and uniformity. */
-    val strain10: Double = 0.0
+    val strain10: Double = 0.0,
+    val daysSinceLastHardSession: Int? = null,
+    val recentSessions: List<RecentSessionSummary> = emptyList()
+)
+
+data class RecentSessionSummary(
+    val date: LocalDate,
+    val name: String,
+    val durationMinutes: Double,
+    val trimp: Double,
+    val intensity: String
 )
 
 /**

@@ -22,14 +22,18 @@ class BanisterTrimpCalculator(
     private val maxHeartRate: Int = 190,
     private val restingHeartRate: Int = 50
 ) {
+    enum class SessionIntensity {
+        EASY,
+        TEMPO,
+        HARD
+    }
+
     fun calculate(durationMinutes: Double, avgHeartRate: Int?): Double {
         if (durationMinutes <= 0.0 || avgHeartRate == null) {
             return 0.0
         }
 
-        val reserve = (maxHeartRate - restingHeartRate).coerceAtLeast(1)
-        val hrRatio = ((avgHeartRate - restingHeartRate).toDouble() / reserve)
-            .coerceIn(0.0, 1.0)
+        val hrRatio = hrReserveRatio(avgHeartRate)
 
         val zoneWeight = when {
             hrRatio < 0.68 -> 1.0
@@ -39,5 +43,21 @@ class BanisterTrimpCalculator(
         }
 
         return durationMinutes * hrRatio * zoneWeight
+    }
+
+    fun classifySession(avgHeartRate: Int?): SessionIntensity {
+        val hrRatio = hrReserveRatio(avgHeartRate)
+        return when {
+            hrRatio >= 0.82 -> SessionIntensity.HARD
+            hrRatio >= 0.68 -> SessionIntensity.TEMPO
+            else -> SessionIntensity.EASY
+        }
+    }
+
+    private fun hrReserveRatio(avgHeartRate: Int?): Double {
+        if (avgHeartRate == null) return 0.0
+        val reserve = (maxHeartRate - restingHeartRate).coerceAtLeast(1)
+        return ((avgHeartRate - restingHeartRate).toDouble() / reserve)
+            .coerceIn(0.0, 1.0)
     }
 }
