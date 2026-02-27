@@ -585,9 +585,7 @@ private fun renderWelcome(
     val welcomeHtml = """
 <div class="welcome-hero anim-in">
     <div class="welcome-icon">
-        <svg width="42" height="26" viewBox="0 0 42 26" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <path d="M1 13H7.5L11 1.5L15.5 24.5L21 0.5L26.5 24.5L31 1.5L34.5 13H41" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
+        <img src="/assets/logo.png" alt="Maestro logo" />
     </div>
     <h1 class="welcome-title">Maestro</h1>
     <p class="welcome-sub">Your AI Endurance Coach &mdash; science-backed training load analysis and intelligent daily workout prescriptions built on the Banister impulse-response model.</p>

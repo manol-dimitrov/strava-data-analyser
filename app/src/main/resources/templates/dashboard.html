@@ -139,11 +139,16 @@
             width: 36px;
             height: 36px;
             border-radius: 11px;
-            background: linear-gradient(140deg, #D4BFFF 0%, #9B72FF 100%);
-            color: #0A0520;
+            overflow: hidden;
             display: grid;
             place-items: center;
-            box-shadow: 0 10px 24px rgba(155, 114, 255, .42);
+            box-shadow: 0 10px 24px rgba(155, 114, 255, .3);
+        }
+        .brand-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
         }
         .brand-name {
             font-family: 'Bricolage Grotesque', sans-serif;
@@ -215,11 +220,16 @@
             height: 74px;
             margin: 0 auto 18px;
             border-radius: 18px;
+            overflow: hidden;
             display: grid;
             place-items: center;
-            color: #0A0520;
-            background: linear-gradient(150deg, #D4BFFF 0%, #9B72FF 100%);
-            box-shadow: 0 16px 32px rgba(155, 114, 255, .4);
+            box-shadow: 0 16px 32px rgba(155, 114, 255, .3);
+        }
+        .welcome-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
         }
         .welcome-title {
             font-family: 'Bricolage Grotesque', sans-serif;
@@ -1305,9 +1315,7 @@
 <header class="topbar anim-in">
     <div class="topbar-brand">
         <div class="brand-icon">
-            <svg width="20" height="13" viewBox="0 0 20 13" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                <path d="M0.5 6.5H3.5L5.5 1L8 12L10 0.5L12 12L14.5 1L16.5 6.5H19.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
+            <img src="/assets/logo.png" alt="Maestro logo" />
         </div>
         <span class="brand-name">Maestro</span>
     </div>
