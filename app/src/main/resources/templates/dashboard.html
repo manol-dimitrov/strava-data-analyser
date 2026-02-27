@@ -150,6 +150,11 @@
             object-fit: cover;
             display: block;
         }
+        .brand-icon svg {
+            width: 20px;
+            height: 13px;
+            display: none;
+        }
         .brand-name {
             font-family: 'Bricolage Grotesque', sans-serif;
             font-size: 16px;
@@ -230,6 +235,12 @@
             height: 100%;
             object-fit: cover;
             display: block;
+        }
+        .welcome-icon svg {
+            width: 42px;
+            height: 26px;
+            display: none;
+            color: #D4BFFF;
         }
         .welcome-title {
             font-family: 'Bricolage Grotesque', sans-serif;
@@ -1315,7 +1326,10 @@
 <header class="topbar anim-in">
     <div class="topbar-brand">
         <div class="brand-icon">
-            <img src="/assets/logo.png" alt="Maestro logo" />
+            <img src="/assets/logo.png" alt="Maestro logo" onerror="this.style.display='none';this.nextElementSibling.style.display='block';" />
+            <svg viewBox="0 0 20 13" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M0.5 6.5H3.5L5.5 1L8 12L10 0.5L12 12L14.5 1L16.5 6.5H19.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
         </div>
         <span class="brand-name">Maestro</span>
     </div>
