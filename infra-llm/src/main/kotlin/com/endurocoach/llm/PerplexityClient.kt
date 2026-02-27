@@ -50,6 +50,13 @@ Behavioural rules:
 - Do not soften bad news. If load state indicates accumulated fatigue, state the risk and adjust the session accordingly.
 - Treat the athlete as a serious, coachable adult who wants honest, actionable guidance.
 - Lactate threshold theory: LT1 (aerobic threshold, ~75% HRR) is the all-day pace ceiling for easy running; LT2 (lactate/anaerobic threshold, ~87% HRR) is the comfortably-hard ceiling for tempo work. Intervals target LT2 or above.
+- Hard-session recency rule (strict):
+    - Never prescribe a quality/hard workout if the last HARD session (Zone 3+, >=82% HRR) was < 48 hours ago.
+    - If last HARD session was < 72 hours ago and ATL > CTL, prescribe recovery/easy only.
+- Method anchors (always apply):
+    - Canova: event-specific aerobic quality with disciplined hard/easy sequencing.
+    - Daniels: use E/M/T/I/R intensity intent and avoid stacking I/R quality back-to-back.
+    - Norwegian: threshold work near threshold; easy days genuinely easy.
 
 Output contract:
 - Return exactly one JSON object with these two keys and no others: session, coach_reasoning.
@@ -72,10 +79,14 @@ Athlete readiness:
 - Coaching philosophy: ${request.checkIn.coachingPhilosophy}
 
 Training load state (Banister impulse-response model):
+- Last hard session (Zone 3+): ${formatDaysSinceHard(request.daysSinceLastHardSession)}
 - TSB (Training Stress Balance): ${"%.2f".format(request.currentTsb)}
 - CTL (Chronic Training Load / fitness): ${"%.2f".format(request.currentCtl)}
 - ATL (Acute Training Load / fatigue): ${"%.2f".format(request.currentAtl)}
 - Recent 7-day volume: ${"%.1f".format(request.recentVolumeMinutes)} minutes
+
+Recent training (last 7 days):
+${buildRecentSessionsBlock(request)}
 
 ${buildPaceProfileBlock(request)}
 
@@ -85,6 +96,25 @@ Prescription requirements:
 - session: Write the full workout as a single block of flowing prose. For quality sessions: open with a brief warm-up note, describe the main effort with specific pace ranges (M:SS–M:SS/km), then close with a brief cool-down note. For easy or recovery runs: describe only the run; do not mention warm-up or cool-down.
 - coach_reasoning: Justify this exact session referencing load state, readiness, coaching philosophy, race focus, and how prescribed paces align with LT1/LT2 zones.
 """.trimIndent()
+    }
+
+    private fun formatDaysSinceHard(daysSinceLastHardSession: Int?): String {
+        return when (daysSinceLastHardSession) {
+            null -> "No hard session recorded in the last 14 days"
+            0 -> "Today"
+            1 -> "1 day ago"
+            else -> "$daysSinceLastHardSession days ago"
+        }
+    }
+
+    private fun buildRecentSessionsBlock(request: WorkoutRequest): String {
+        if (request.recentSessions.isEmpty()) {
+            return "- No activities recorded in the last 7 days"
+        }
+
+        return request.recentSessions.joinToString("\n") { session ->
+            "- ${session.date}: ${session.name}, ${"%.0f".format(session.durationMinutes)} min, TRIMP ${"%.1f".format(session.trimp)}, ${session.intensity}"
+        }
     }
 
     private fun buildPaceProfileBlock(request: WorkoutRequest): String {

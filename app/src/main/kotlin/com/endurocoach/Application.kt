@@ -65,7 +65,19 @@ data class LoadSnapshotResponse(
     val monotony: Double,
     val ctlRampRate: Double,
     val recentVolumeMinutes: Double,
+    val daysSinceLastHardSession: Int? = null,
+    val recentSessions: List<RecentSessionResponse> = emptyList(),
     val series: List<LoadPointResponse>
+)
+
+@Serializable
+
+data class RecentSessionResponse(
+    val date: String,
+    val name: String,
+    val durationMinutes: Double,
+    val trimp: Double,
+    val intensity: String
 )
 
 @Serializable
@@ -491,6 +503,16 @@ fun Application.module() {
                 monotony = snapshot.monotony,
                 ctlRampRate = snapshot.ctlRampRate,
                 recentVolumeMinutes = snapshot.recentVolumeMinutes,
+                daysSinceLastHardSession = snapshot.daysSinceLastHardSession,
+                recentSessions = snapshot.recentSessions.map {
+                    RecentSessionResponse(
+                        date = it.date.toString(),
+                        name = it.name,
+                        durationMinutes = it.durationMinutes,
+                        trimp = it.trimp,
+                        intensity = it.intensity
+                    )
+                },
                 series = snapshot.series.map {
                     LoadPointResponse(
                         date = it.date.toString(),

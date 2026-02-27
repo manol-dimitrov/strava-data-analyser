@@ -130,4 +130,35 @@ class LoadSeriesServiceTest {
             "TSB should not be deeply negative for consistent training, got ${snapshot.tsb}"
         )
     }
+
+    @Test
+    fun snapshotCapturesDaysSinceLastHardSession() {
+        val endDate = LocalDate.of(2025, 6, 20)
+        val activities = listOf(
+            Activity(
+                date = endDate.minusDays(2),
+                durationMinutes = 50.0,
+                avgHeartRate = 171, // HARD (>=82% HRR)
+                name = "VO2 session"
+            ),
+            Activity(
+                date = endDate.minusDays(1),
+                durationMinutes = 40.0,
+                avgHeartRate = 130,
+                name = "Easy run"
+            ),
+            Activity(
+                date = endDate,
+                durationMinutes = 35.0,
+                avgHeartRate = 128,
+                name = "Recovery jog"
+            )
+        )
+
+        val snapshot = service.buildSnapshot(activities = activities, days = 14, endDate = endDate)
+        assertEquals(2, snapshot.daysSinceLastHardSession)
+        assertTrue(snapshot.recentSessions.isNotEmpty())
+        assertEquals("HARD", snapshot.recentSessions.first { it.name == "VO2 session" }.intensity)
+        assertEquals("EASY", snapshot.recentSessions.first { it.name == "Recovery jog" }.intensity)
+    }
 }

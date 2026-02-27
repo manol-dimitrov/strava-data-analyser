@@ -164,6 +164,19 @@ private suspend fun handleToolsCall(id: JsonElement?, params: JsonObject, deps: 
                     put("recentVolumeMinutes", snapshot.recentVolumeMinutes)
                     put("spike10", snapshot.spike10)
                     put("strain10", snapshot.strain10)
+
+                    put("daysSinceLastHardSession", snapshot.daysSinceLastHardSession)
+                    put("recentSessions", buildJsonArray {
+                        snapshot.recentSessions.forEach { session ->
+                            add(buildJsonObject {
+                                put("date", session.date.toString())
+                                put("name", session.name)
+                                put("durationMinutes", session.durationMinutes)
+                                put("trimp", session.trimp)
+                                put("intensity", session.intensity)
+                            })
+                        }
+                    })
                     put("series", buildJsonArray {
                         snapshot.series.forEach { pt ->
                             add(buildJsonObject {

@@ -68,4 +68,15 @@ class BanisterTrimpCalculatorTest {
         val trimpHigh = calc.calculate(60.0, 170)
         assertTrue(trimpHigh > trimpLow, "Higher HR should produce higher TRIMP")
     }
+
+    @Test
+    fun classifySessionUsesZoneBoundaries() {
+        // HRR reserve = 140 (190-50)
+        // 68% boundary => 145.2 bpm; 82% boundary => 164.8 bpm
+        assertEquals(BanisterTrimpCalculator.SessionIntensity.EASY, calc.classifySession(145))
+        assertEquals(BanisterTrimpCalculator.SessionIntensity.TEMPO, calc.classifySession(146))
+        assertEquals(BanisterTrimpCalculator.SessionIntensity.TEMPO, calc.classifySession(164))
+        assertEquals(BanisterTrimpCalculator.SessionIntensity.HARD, calc.classifySession(165))
+        assertEquals(BanisterTrimpCalculator.SessionIntensity.HARD, calc.classifySession(180))
+    }
 }

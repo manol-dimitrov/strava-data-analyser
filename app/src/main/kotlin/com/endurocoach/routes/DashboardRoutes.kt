@@ -368,7 +368,9 @@ fun Route.installDashboardRoutes(dependencies: DashboardDependencies) {
             ctlRampRate = snapshot.ctlRampRate,
             spike10 = snapshot.spike10,
             strain10 = snapshot.strain10,
-            recentPaceProfile = paceProfile
+            recentPaceProfile = paceProfile,
+            daysSinceLastHardSession = snapshot.daysSinceLastHardSession,
+            recentSessions = snapshot.recentSessions
         )
 
         runCatching { dependencies.llmClient.generateWorkoutPlan(request) }
@@ -758,7 +760,13 @@ private fun renderDashboard(
 
     // TSB contextual interpretation (Mujika & Busso research-based ranges)
     val tsb = snapshot.tsb
+    val daysSinceHard = snapshot.daysSinceLastHardSession
+    val hardWithin72h = daysSinceHard != null && daysSinceHard < 3
+    val hardWithin48h = daysSinceHard != null && daysSinceHard < 2
+    val recentHardWithHighFatigue = hardWithin72h && snapshot.atl > snapshot.ctl
     val tsbBadgeClass = when {
+        recentHardWithHighFatigue -> "fatigued"
+        hardWithin48h -> "neutral"
         tsb > 25 -> "fatigued"   // detraining risk
         tsb > 10 -> "fresh"      // tapered / race-ready
         tsb > -10 -> "neutral"   // productive training
@@ -766,6 +774,8 @@ private fun renderDashboard(
         else -> "fatigued"       // overreaching risk
     }
     val tsbBadgeLabel = when {
+        recentHardWithHighFatigue -> "Recovering"
+        hardWithin48h -> "Hold quality"
         tsb > 25 -> "Detraining"
         tsb > 10 -> "Race-ready"
         tsb > 0 -> "Fresh"
@@ -774,6 +784,8 @@ private fun renderDashboard(
         else -> "Overreaching"
     }
     val tsbExplainBase = when {
+        recentHardWithHighFatigue -> "You hit a hard session in the last 72 hours and your acute fatigue is still above fitness. This is a recovery window, not a quality window."
+        hardWithin48h -> "You hit a hard session in the last 48 hours. Even if form looks okay, adaptation is still happening — hold intensity today."
         tsb > 25  -> "You've been very fresh for a while \u2014 if you're not peaking for a race, your fitness may slowly be slipping. Time to add some load back in."
         tsb > 10  -> "You're fresh and fit \u2014 perfect timing for a race or a big quality session. Make the most of it."
         tsb > 0   -> "Feeling good with solid fitness underneath. A great day for a quality effort or a strong long run."
@@ -783,6 +795,8 @@ private fun renderDashboard(
     }
     // Cross-metric awareness: append a relevant secondary signal when it matters
     val tsbCrossMetric = when {
+        hardWithin72h && snapshot.atl > snapshot.ctl -> " Last hard run is too recent for another quality day — keep this session easy."
+        hardWithin72h -> " Last hard run is recent, so bias toward easy aerobic work today."
         snapshot.acwr > 1.5 -> " Your load ratio has spiked \u2014 dial it back today regardless."
         snapshot.acwr > 1.3 && tsb > -10 -> " Your load ratio is creeping up though \u2014 keep an eye on it."
         snapshot.monotony > 2.0 && tsb <= 0  -> " Your training variety is also low \u2014 mix in a different type of session."
@@ -793,6 +807,8 @@ private fun renderDashboard(
 
     // Actionable call-to-action for the hero card
     val tsbCta = when {
+        recentHardWithHighFatigue -> "⛔ Hard effort is too soon. Keep it easy today and reassess tomorrow."
+        hardWithin48h -> "🛌 Protect adaptation — easy aerobic running or rest today, quality tomorrow at the earliest."
         tsb > 25  -> "\u27A1 Get moving \u2014 a solid tempo or threshold session today will rebuild momentum without overdoing it."
         tsb > 10  -> "\u26A1 This is your window. Ask the coach for a race-effort session or hit that hard workout you've been saving."
         tsb > 0   -> "\u2705 Use the freshness \u2014 a quality long run, tempo, or interval session will land well today."
@@ -976,12 +992,16 @@ private fun renderDashboard(
 
     // Hero card supplementary vars
     val tsbHeroClass = when {
+        recentHardWithHighFatigue -> "negative-risk"
+        hardWithin48h -> "negative-ok"
         tsb > 10 -> "positive"
         tsb > 0 -> "neutral"
         tsb > -20 -> "negative-ok"
         else -> "negative-risk"
     }
     val tsbHeroMessage = when {
+        recentHardWithHighFatigue -> "Recent hard run + high fatigue: recover today"
+        hardWithin48h -> "Recent hard run: no quality today"
         tsb > 25 -> "Keep it steady — your fitness base may be fading"
         tsb > 10 -> "Primed to push hard or race"
         tsb > 0 -> "Fresh with solid fitness — a good day to perform"

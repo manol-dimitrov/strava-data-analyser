@@ -3,13 +3,14 @@ package com.endurocoach.metrics
 import com.endurocoach.domain.Activity
 import com.endurocoach.domain.LoadPoint
 import com.endurocoach.domain.LoadSnapshot
+import com.endurocoach.domain.RecentSessionSummary
 import java.time.LocalDate
 import kotlin.math.exp
 import kotlin.math.sqrt
 
 data class LoadSettings(
     val ctlTimeConstantDays: Double = 42.0,
-    val atlTimeConstantDays: Double = 7.0,
+    val atlTimeConstantDays: Double = 5.0,
     /** Number of days used to seed CTL/ATL from the initial training data. */
     val seedDays: Int = 7
 )
@@ -116,6 +117,26 @@ class LoadSeriesService(
             }
         } else 0.0
 
+        val recentSessions = activities
+            .filter { !it.date.isBefore(endDate.minusDays(6)) && !it.date.isAfter(endDate) }
+            .sortedByDescending { it.date }
+            .map {
+                val intensity = trimpCalculator.classifySession(it.avgHeartRate).name
+                RecentSessionSummary(
+                    date = it.date,
+                    name = it.name?.takeIf { value -> value.isNotBlank() } ?: (it.type ?: "Activity"),
+                    durationMinutes = it.durationMinutes,
+                    trimp = trimpCalculator.calculate(it.durationMinutes, it.avgHeartRate),
+                    intensity = intensity
+                )
+            }
+
+        val daysSinceLastHardSession = activities
+            .filter { !it.date.isBefore(endDate.minusDays(13)) && !it.date.isAfter(endDate) }
+            .sortedByDescending { it.date }
+            .firstOrNull { trimpCalculator.classifySession(it.avgHeartRate) == BanisterTrimpCalculator.SessionIntensity.HARD }
+            ?.let { java.time.temporal.ChronoUnit.DAYS.between(it.date, endDate).toInt() }
+
         return LoadSnapshot(
             date = latest.date,
             ctl = latest.ctl,
@@ -127,7 +148,9 @@ class LoadSeriesService(
             ctlRampRate = ctlRampRate,
             series = series,
             spike10 = spike10,
-            strain10 = strain10
+            strain10 = strain10,
+            daysSinceLastHardSession = daysSinceLastHardSession,
+            recentSessions = recentSessions
         )
     }
 
