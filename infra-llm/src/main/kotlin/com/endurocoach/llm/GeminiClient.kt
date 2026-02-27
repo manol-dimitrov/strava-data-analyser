@@ -119,6 +119,11 @@ Behavioural rules:
 - Hard-session recency rule (strict):
     - Never prescribe a quality/hard workout if the last HARD session (Zone 3+, >=82% HRR) was < 48 hours ago.
     - If last HARD session was < 72 hours ago and ATL > CTL, prescribe recovery/easy only.
+- Duration rule (strict):
+    - Total prescribed session duration must honor available time.
+    - Target total duration should be 85%–100% of available minutes by default.
+    - Never exceed available minutes.
+    - If recovery/rest is indicated by load or hard-session recency rules, allow shorter but still state explicit total duration.
 - Always blend these method anchors into your decision, regardless of coaching philosophy:
     - Canova: event-specific aerobic strength and controlled quality; protect easy days after hard sessions.
     - Daniels: choose stress by adaptation target (E/M/T/I/R); avoid stacking I/R efforts without recovery.
@@ -151,6 +156,7 @@ Athlete readiness:
 - Leg feeling: ${request.checkIn.legFeeling}/10
 - Mental readiness: ${request.checkIn.mentalReadiness}/10
 - Time available: ${request.checkIn.timeAvailableMinutes} minutes
+- Time available is a hard cap for total prescribed duration.
 - Coaching philosophy: ${request.checkIn.coachingPhilosophy}
 
 Training load state:
@@ -174,6 +180,9 @@ ${buildRaceFocusBlock(request.checkIn.raceDistance)}
 
 Prescription requirements:
 - session: Write the full workout as a single block of flowing prose. For quality sessions (intervals, tempo, threshold work): open with a brief warm-up in the same text (e.g. "After a 10-min easy jog at 5:50/km..."), describe the main effort with specific intervals, recoveries, and pace ranges (M:SS–M:SS/km), then close with a brief cool-down note (e.g. "...followed by 5 min easy to finish"). For easy or recovery runs: describe only the run with pace range; do not mention warm-up or cool-down.
+- Session must include explicit total planned duration in minutes.
+- Do not exceed time available.
+- For non-recovery days, target ~85–100% of time available.
 - coach_reasoning: Justify this exact session by referencing the athlete's TSB, ACWR, CTL trend, monotony, subjective readiness, coaching philosophy, and race focus. State which physiological adaptation this session targets and how the prescribed paces align with LT1/LT2 zones. If ACWR is in the sweet spot, say so — don't look for problems that aren't there.
 """.trimIndent()
     }

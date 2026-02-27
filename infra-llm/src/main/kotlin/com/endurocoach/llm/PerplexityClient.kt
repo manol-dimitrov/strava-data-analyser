@@ -53,6 +53,11 @@ Behavioural rules:
 - Hard-session recency rule (strict):
     - Never prescribe a quality/hard workout if the last HARD session (Zone 3+, >=82% HRR) was < 48 hours ago.
     - If last HARD session was < 72 hours ago and ATL > CTL, prescribe recovery/easy only.
+- Duration rule (strict):
+    - Total prescribed session duration must honor available time.
+    - Target total duration should be 85%–100% of available minutes by default.
+    - Never exceed available minutes.
+    - If recovery/rest is indicated by load or hard-session recency rules, allow shorter but still state explicit total duration.
 - Method anchors (always apply):
     - Canova: event-specific aerobic quality with disciplined hard/easy sequencing.
     - Daniels: use E/M/T/I/R intensity intent and avoid stacking I/R quality back-to-back.
@@ -76,6 +81,7 @@ Athlete readiness:
 - Leg feeling: ${request.checkIn.legFeeling}/10
 - Mental readiness: ${request.checkIn.mentalReadiness}/10
 - Time available: ${request.checkIn.timeAvailableMinutes} minutes
+- Time available is a hard cap for total prescribed duration.
 - Coaching philosophy: ${request.checkIn.coachingPhilosophy}
 
 Training load state (Banister impulse-response model):
@@ -94,6 +100,9 @@ ${buildRaceFocusBlock(request.checkIn.raceDistance)}
 
 Prescription requirements:
 - session: Write the full workout as a single block of flowing prose. For quality sessions: open with a brief warm-up note, describe the main effort with specific pace ranges (M:SS–M:SS/km), then close with a brief cool-down note. For easy or recovery runs: describe only the run; do not mention warm-up or cool-down.
+- Session must include explicit total planned duration in minutes.
+- Do not exceed time available.
+- For non-recovery days, target ~85–100% of time available.
 - coach_reasoning: Justify this exact session referencing load state, readiness, coaching philosophy, race focus, and how prescribed paces align with LT1/LT2 zones.
 """.trimIndent()
     }

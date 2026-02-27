@@ -348,6 +348,7 @@ fun Route.installDashboardRoutes(dependencies: DashboardDependencies) {
         val profileContext = buildOnboardingProfileContext(state.onboarding)
         val basePhilosophy = dependencies.philosophyRulePacks[parsed.coachingPhilosophy]
             ?: dependencies.philosophyRulePacks.getValue("balanced")
+        val resolvedRaceDistance = inferRaceDistanceFromEventName(state.onboarding.targetEventName) ?: parsed.raceDistance
 
         val paceProfile = RecentPaceCalculator.calculate(
             activities = activities,
@@ -357,7 +358,8 @@ fun Route.installDashboardRoutes(dependencies: DashboardDependencies) {
 
         val request = WorkoutRequest(
             checkIn = parsed.copy(
-                coachingPhilosophy = "$basePhilosophy\n$profileContext"
+                coachingPhilosophy = "$basePhilosophy\n$profileContext",
+                raceDistance = resolvedRaceDistance
             ),
             currentTsb = snapshot.tsb,
             currentCtl = snapshot.ctl,
@@ -550,15 +552,31 @@ private fun parseTargetEventDate(input: String?, current: String): String {
     return runCatching { LocalDate.parse(raw) }.map { raw }.getOrElse { current }
 }
 
+private fun inferRaceDistanceFromEventName(targetEventName: String): String? {
+    val name = targetEventName.trim().lowercase()
+    if (name.isBlank()) return null
+
+    return when {
+        "marathon" in name && "half" !in name -> "marathon"
+        "half marathon" in name || "half-marathon" in name || "hm" in name -> "half_marathon"
+        "10k" in name || "10 km" in name || "10km" in name -> "10km"
+        "5k" in name || "5 km" in name || "5km" in name -> "5km"
+        else -> null
+    }
+}
+
 private fun buildOnboardingProfileContext(onboarding: OnboardingState): String {
     val eventName = onboarding.targetEventName.ifBlank { "Not specified" }
     val eventDate = onboarding.targetEventDate.ifBlank { "Not specified" }
+    val inferredDistance = inferRaceDistanceFromEventName(onboarding.targetEventName)
 
     return """
 Athlete profile context:
 - Sport focus: ${onboarding.sportFocus}
 - Target event: $eventName
 - Target event date: $eventDate
+- Inferred race distance from target event: ${inferredDistance ?: "Not inferred"}
+If a target event implies a race distance (e.g. marathon/half), treat that as the primary race focus unless explicitly overridden.
 If a target event date is specified and within 12 weeks, bias the session toward appropriate periodisation (build, sharpen, taper) while respecting readiness and risk metrics.
 """.trimIndent()
 }
@@ -735,11 +753,13 @@ private fun renderDashboard(
         val selected = if (state.checkIn.raceDistance == value) "selected" else ""
         "<option value=\"$value\" $selected>$label</option>"
     }
+    val inferredRaceDistance = inferRaceDistanceFromEventName(state.onboarding.targetEventName)
+    val raceDistanceValue = inferredRaceDistance ?: state.checkIn.raceDistance
 
     // Hide the goal selector when the athlete already declared a target event during onboarding.
     // A hidden input preserves the value so the form still submits it correctly.
     val raceDistanceBlock = if (state.onboarding.targetEventName.isNotBlank()) {
-        "<input type=\"hidden\" name=\"raceDistance\" value=\"${escapeHtml(state.checkIn.raceDistance)}\" />"
+        "<input type=\"hidden\" name=\"raceDistance\" value=\"${escapeHtml(raceDistanceValue)}\" />"
     } else {
         """<div class="form-group">
                     <label>What are you training for?</label>
